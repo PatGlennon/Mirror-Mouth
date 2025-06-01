@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Mirror Mouth</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Mirror Mouth</string>
+    <string name="nav_header_subtitle">A fun game of gibberish</string>
+    <string name="nav_header_desc">Mirror Mouth</string>
+    <string name="action_settings">App Settings</string>
+
+    <string name="menu_rules">Rules</string>
+    <string name="menu_game">Game</string>
+    <string name="menu_settings">Settings</string>
+</resources>
