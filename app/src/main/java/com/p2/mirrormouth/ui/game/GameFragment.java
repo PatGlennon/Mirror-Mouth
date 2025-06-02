@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -26,9 +27,17 @@ public class GameFragment extends Fragment {
         binding = FragmentGameBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        final TextView textView = binding.textGame;
+        final TextView word1text = binding.word1text;
+        final ImageButton word1button = binding.word1button;
 
-        textView.setText("Chicken23");
+        word1text.setText("Chicken");
+
+        word1button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
 
         MediaRecorder recorder = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
