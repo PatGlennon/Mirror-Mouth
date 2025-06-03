@@ -25,7 +25,17 @@ import androidx.lifecycle.ViewModelProvider;
 import com.p2.mirrormouth.R;
 import com.p2.mirrormouth.databinding.FragmentGameBinding;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import com.arthenica.ffmpegkit.FFmpegKit;
 
 public class GameFragment extends Fragment {
 
@@ -34,6 +44,7 @@ public class GameFragment extends Fragment {
     private FragmentGameBinding binding;
     private MediaRecorder recorder = null;
     private String fileName = null;
+    private String revFileName = null;
     private MediaPlayer player = null;
     private Context thisContext = null;
 
@@ -49,7 +60,10 @@ public class GameFragment extends Fragment {
         ConstraintLayout layout = binding.layout;
 
         fileName = thisContext.getExternalCacheDir().getAbsolutePath();
-        fileName += "/audiorecordtest.3gp";
+        fileName += "/audiorecordtest.wav";
+
+        revFileName = thisContext.getExternalCacheDir().getAbsolutePath();
+        revFileName += "/revtest.wav";
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -57,21 +71,6 @@ public class GameFragment extends Fragment {
         }
 
         createWordRow(1,1,layout);
-
-//
-//        word1record.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                startRecording();
-//            }
-//        });
-//
-//        word1play.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//
-//            }
-//        });
 
         return root;
     }
@@ -163,7 +162,8 @@ public class GameFragment extends Fragment {
                 playButton,
                 playParams
         );
-    };
+
+    }
 
     private void onRecord(boolean start) {
         if (start) {
@@ -183,7 +183,7 @@ public class GameFragment extends Fragment {
     private void startPlaying() {
         player = new MediaPlayer();
         try {
-            player.setDataSource(fileName);
+            player.setDataSource(revFileName);
             player.prepare();
             player.start();
         } catch (IOException e) {
@@ -199,9 +199,9 @@ public class GameFragment extends Fragment {
     private void startRecording() {
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
         recorder.setOutputFile(fileName);
-        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
 
         try {
             recorder.prepare();
@@ -227,6 +227,12 @@ public class GameFragment extends Fragment {
                     setImageResource(R.drawable.stop_circle_24px);
                 } else {
                     setImageResource(R.drawable.recordbutton);
+                    //after recording, reverse sound clip, maybe not best to do here?
+                    try {
+                        reverseSound();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 mStartRecording = !mStartRecording;
             }
@@ -272,6 +278,47 @@ public class GameFragment extends Fragment {
         if (player != null) {
             player.release();
             player = null;
+        }
+    }
+
+    private void reverseSound() throws InterruptedException{
+        try {
+
+            //Reading file to main array  bytes 'music'
+            InputStream in = new FileInputStream(fileName);
+            byte[] music = new byte[in.available()];
+            BufferedInputStream bis = new BufferedInputStream(in, 8000);
+            DataInputStream dis = new DataInputStream(bis);
+            int i = 0;
+            while (dis.available() > 0) {
+                music[i] = dis.readByte();
+                i++;
+            }
+
+            //create buffer array with bytes without files header information
+            //inverse bytes in array
+            int len = music.length;
+            byte[] buff = new byte[len];
+            for (int y = 17; y < music.length - 1; y++) {
+                buff[len - y - 1] = music[y];
+            }
+
+            //put inversed bytes in buffers array to main array 'music'
+            for (int y = 17; y > music.length - 1; y++) {
+                music[y] = buff[y];
+            }
+            dis.close();
+
+            //write reversed sound to the new file
+            OutputStream os = new FileOutputStream(revFileName);
+            BufferedOutputStream bos = new BufferedOutputStream(os, 8000);
+            DataOutputStream dos = new DataOutputStream(bos);
+            dos.write(music, 0, music.length - 1);
+            dos.flush();
+
+
+        } catch (IOException ioe) {
+
         }
     }
 
