@@ -15,11 +15,13 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -54,6 +56,7 @@ public class GameFragment extends Fragment {
     private Context thisContext = null;
     private Activity thisActivity = null;
     private Calendar calendar;
+    private ConstraintLayout mConstraintLayout;
 
 
 
@@ -70,6 +73,7 @@ public class GameFragment extends Fragment {
         //set context and activity values
         thisContext = getContext();
         thisActivity = getActivity();
+
         String formattedDate;
 
         //get calendar
@@ -97,39 +101,74 @@ public class GameFragment extends Fragment {
             recorder = new MediaRecorder(requireContext());
         }
 
-        createWordRow(1,1,layout);
+        int numOfRows = 5;
+        for (int i = 1; i <= numOfRows; i++){
+            createWordRow(1,i,layout);
+        }
+
 
         return root;
     }
 
     private void createWordRow(int team, int rowNum, ConstraintLayout layout){
+        LinearLayout buttonLayout = new LinearLayout(thisContext);
         TextView word = new TextView(thisContext);
         RecordButton recordButton = new RecordButton(thisContext);
         PlayButton playButton = new PlayButton(thisContext);
         int rowId = 100*rowNum;
         int teamId = 1000*team;
 
-        ConstraintLayout.LayoutParams wordParams = new ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.WRAP_CONTENT,
+        int previousButtonLayoutId = 0;
+
+        if (rowNum != 1){
+            previousButtonLayoutId = (100 * (rowNum - 1)) + (1000 * team);
+        }
+
+        ConstraintLayout.LayoutParams linearLayoutParams = new ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.MATCH_PARENT,
                 ConstraintLayout.LayoutParams.WRAP_CONTENT
+        );
+        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
+                0,
+                dpToPx(48),
+                1
+        );
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                dpToPx(48),
+                dpToPx(48)
         );
 
-        ConstraintLayout.LayoutParams recordParams = new ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.WRAP_CONTENT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
-        );
+        //set params for word
+        linearLayoutParams.topMargin = dpToPx(5);
+        linearLayoutParams.orientation = LinearLayout.HORIZONTAL;
+        linearLayoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+        linearLayoutParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
+        if (rowNum == 1){
+            linearLayoutParams.topToBottom = R.id.teamTitle;
+        } else{
+            linearLayoutParams.topToBottom = previousButtonLayoutId;
+        }
 
-        ConstraintLayout.LayoutParams playParams = new ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.WRAP_CONTENT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
-        );
+
+
+        //set params for word
+        textParams.leftMargin = dpToPx(2);
+        textParams.rightMargin = dpToPx(2);
+
+        //set params for buttons
+        buttonParams.leftMargin = dpToPx(2);
+        buttonParams.rightMargin = dpToPx(2);
+
+
+        //set layout params for the Linear Layout
+        buttonLayout.setBackgroundResource(R.drawable.item_background);
+        buttonLayout.setMinimumHeight(48);
+        buttonLayout.setElevation(2);
 
         //Set layout params for Word TextArea
         word.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
-        word.setBackgroundResource(R.drawable.roundcorner);
-        word.setMinimumHeight(48);
-        word.setMaxHeight(48);
-        word.setMinimumWidth(pxToDp(100));
+        word.setTextColor(getResources().getColor(R.color.black));
+        word.setPadding(dpToPx(5),0,0,0);
         word.setAllCaps(true);
         word.setGravity(Gravity.CENTER);
         word.setTextSize(20);
@@ -137,54 +176,38 @@ public class GameFragment extends Fragment {
         //set layout params for record button
         recordButton.setImageResource(R.drawable.mic_24px);
         recordButton.setBackgroundResource(R.drawable.roundcorner);
-        recordButton.setMinimumWidth(48);
-        recordButton.setMinimumHeight(48);
 
         //set layout params for play button
         playButton.setImageResource(R.drawable.play_circle_24px);
         playButton.setBackgroundResource(R.drawable.roundcorner);
-        playButton.setMinimumWidth(48);
-        playButton.setMinimumHeight(48);
 
-        //Set Unique IDs for the word rows
+        //Set Unique IDs for the items
+        int layoutId = teamId=rowId+0;
         int wordId = teamId+rowId+1;
         int recordId = teamId+rowId+2;
         int playId = teamId+rowId+3;
 
+        buttonLayout.setId(layoutId);
         word.setId(wordId);
         recordButton.setId(recordId);
         playButton.setId(playId);
 
-        //set params for word
-        wordParams.topMargin = 8;
-        wordParams.leftMargin = 64;
-        wordParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
-        wordParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID;
-        wordParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
-        wordParams.verticalBias = .2F;
+        ConstraintSet constraintSet = new ConstraintSet();
 
-        //set params for record button
-        recordParams.bottomToBottom = wordId;
-        recordParams.endToStart = playId;
-        recordParams.startToEnd = wordId;
-        recordParams.topToTop = wordId;
-        recordParams.leftMargin = 20;
-        recordParams.verticalBias = 1.0F;
 
-        //set params for play button
-        playParams.bottomToBottom = recordId;
-        playParams.startToEnd = recordId;
-        playParams.topToTop = recordId;
-        playParams.leftMargin = 20;
-        playParams.verticalBias = 0.0F;
+
 
 
         word.setText("Program Word");
 
         //Add to layout - will need more logic for later rows
-        layout.addView(word, wordParams);
-        layout.addView(recordButton, recordParams);
-        layout.addView(playButton, playParams);
+        layout.addView(buttonLayout, linearLayoutParams);
+        buttonLayout.addView(word, textParams);
+        buttonLayout.addView(recordButton, buttonParams);
+        buttonLayout.addView(playButton, buttonParams);
+
+        //constraintSet.connect(layoutId, ConstraintSet.TOP, R.id.teamTitle, ConstraintSet.BOTTOM);
+        //constraintSet.applyTo(buttonLayout);
 
     }
 
@@ -365,9 +388,9 @@ public class GameFragment extends Fragment {
 
         }
     }
-    public int pxToDp(int px){
-        DisplayMetrics displaymetrics = new DisplayMetrics();
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, px,displaymetrics);
+    public int dpToPx(int dp){
+        float scale = thisContext.getResources().getDisplayMetrics().density;
+        return (int) (dp * scale + 0.5f);
     }
 
     @Override

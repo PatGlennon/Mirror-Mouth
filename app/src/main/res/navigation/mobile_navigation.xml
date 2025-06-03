@@ -14,6 +14,7 @@
     <fragment
         android:id="@+id/nav_game"
         android:name="com.p2.mirrormouth.ui.game.GameFragment"
+        android:layout_gravity="center"
         android:label="@string/menu_game"
         tools:layout="@layout/fragment_game" />
 
@@ -21,5 +22,6 @@
         android:id="@+id/nav_settings"
         android:name="com.p2.mirrormouth.ui.settings.SettingsFragment"
         android:label="@string/menu_settings"
+        android:layout_gravity="center"
         tools:layout="@layout/fragment_settings" />
 </navigation>

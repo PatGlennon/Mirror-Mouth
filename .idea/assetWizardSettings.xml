@@ -24,7 +24,7 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
-                                                <entry key="imagePath" value="C:\Users" />
+                                                <entry key="imagePath" value="C:\Users\patrickg\AppData\Local\Temp\ic_android_black_24dp.xml" />
                                                 <entry key="opacityPercent" value="60" />
                                               </map>
                                             </option>
@@ -85,7 +85,7 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
-                                                <entry key="imagePath" value="C:\Users\patrickg\Downloads\Mirror Mouth2.png" />
+                                                <entry key="imagePath" value="C:\Users\patrickg\Downloads\MirrorMouth2.0.png" />
                                                 <entry key="scalingPercent" value="63" />
                                               </map>
                                             </option>
@@ -119,7 +119,7 @@
                                   <option name="values">
                                     <map>
                                       <entry key="backgroundAssetType" value="COLOR" />
-                                      <entry key="backgroundColor" value="000000" />
+                                      <entry key="backgroundColor" value="0081d0" />
                                     </map>
                                   </option>
                                 </PersistentState>
