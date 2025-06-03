@@ -1,29 +1,31 @@
 package com.p2.mirrormouth.ui.game;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
-import android.graphics.drawable.Drawable;
-import android.health.connect.datatypes.Record;
+import android.media.AudioRecord;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.p2.mirrormouth.R;
 import com.p2.mirrormouth.databinding.FragmentGameBinding;
+import com.p2.mirrormouth.classes.wavClass;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -34,8 +36,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import com.arthenica.ffmpegkit.FFmpegKit;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 
 public class GameFragment extends Fragment {
 
@@ -43,10 +46,17 @@ public class GameFragment extends Fragment {
 
     private FragmentGameBinding binding;
     private MediaRecorder recorder = null;
+    private AudioRecord audioRecord = null;
     private String fileName = null;
     private String revFileName = null;
     private MediaPlayer player = null;
+    private wavClass wavRecorder = null;
     private Context thisContext = null;
+    private Activity thisActivity = null;
+    private Calendar calendar;
+
+
+
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -55,15 +65,32 @@ public class GameFragment extends Fragment {
 
         binding = FragmentGameBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
-        thisContext = getContext();
-
         ConstraintLayout layout = binding.layout;
 
+        //set context and activity values
+        thisContext = getContext();
+        thisActivity = getActivity();
+        String formattedDate;
+
+        //get calendar
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            LocalDateTime now = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddHHmmss");
+            formattedDate = now.format(formatter);
+        }else{
+            formattedDate = String.valueOf(System.currentTimeMillis());
+        }
+
+
         fileName = thisContext.getExternalCacheDir().getAbsolutePath();
-        fileName += "/audiorecordtest.wav";
+        //fileName += "/audiorecordtest"+formattedDate+".wav";
 
         revFileName = thisContext.getExternalCacheDir().getAbsolutePath();
         revFileName += "/revtest.wav";
+
+        //Check to make sure recording permissions are set again
+
+
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -99,6 +126,12 @@ public class GameFragment extends Fragment {
 
         //Set layout params for Word TextArea
         word.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
+        word.setBackgroundResource(R.drawable.roundcorner);
+        word.setMinimumHeight(48);
+        word.setMaxHeight(48);
+        word.setMinimumWidth(pxToDp(100));
+        word.setAllCaps(true);
+        word.setGravity(Gravity.CENTER);
         word.setTextSize(20);
 
         //set layout params for record button
@@ -148,23 +181,14 @@ public class GameFragment extends Fragment {
 
         word.setText("Program Word");
 
-        layout.addView(
-            word,
-            wordParams
-        );
-
-        layout.addView(
-                recordButton,
-                recordParams
-        );
-
-        layout.addView(
-                playButton,
-                playParams
-        );
+        //Add to layout - will need more logic for later rows
+        layout.addView(word, wordParams);
+        layout.addView(recordButton, recordParams);
+        layout.addView(playButton, playParams);
 
     }
 
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     private void onRecord(boolean start) {
         if (start) {
             startRecording();
@@ -196,31 +220,29 @@ public class GameFragment extends Fragment {
         player = null;
     }
 
+
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     private void startRecording() {
-        recorder = new MediaRecorder();
-        recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        recorder.setOutputFormat(MediaRecorder.OutputFormat.DEFAULT);
-        recorder.setOutputFile(fileName);
-        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        wavRecorder = new wavClass(fileName);
+        wavRecorder.startRecording();
+    }
+
+    private void stopRecording() {
+        wavRecorder.stopRecording();
 
         try {
-            recorder.prepare();
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "prepare() failed");
+            reverseSound();
+        } catch (InterruptedException e) {
+            Log.e("Reverse","Reverse Failed");
+            throw new RuntimeException(e);
         }
-
-        recorder.start();
-    }
-    private void stopRecording() {
-        recorder.stop();
-        recorder.release();
-        recorder = null;
     }
 
     class RecordButton extends androidx.appcompat.widget.AppCompatImageButton {
         boolean mStartRecording = true;
 
         OnClickListener clicker = new OnClickListener() {
+            @RequiresPermission(Manifest.permission.RECORD_AUDIO)
             public void onClick(View v) {
                 onRecord(mStartRecording);
                 if (mStartRecording) {
@@ -284,42 +306,68 @@ public class GameFragment extends Fragment {
     private void reverseSound() throws InterruptedException{
         try {
 
-            //Reading file to main array  bytes 'music'
-            InputStream in = new FileInputStream(fileName);
-            byte[] music = new byte[in.available()];
+            //Reading file to byte array wordForward
+            InputStream in = new FileInputStream(fileName+"/final_record.wav");
+            byte[] wordForward = new byte[in.available()];
             BufferedInputStream bis = new BufferedInputStream(in, 8000);
             DataInputStream dis = new DataInputStream(bis);
             int i = 0;
             while (dis.available() > 0) {
-                music[i] = dis.readByte();
+                wordForward[i] = dis.readByte();
                 i++;
             }
 
             //create buffer array with bytes without files header information
             //inverse bytes in array
-            int len = music.length;
-            byte[] buff = new byte[len];
-            for (int y = 17; y < music.length - 1; y++) {
-                buff[len - y - 1] = music[y];
+            int len = wordForward.length;
+            int headerLength = 44;
+            byte[] output = new byte[len];
+            byte[] headers = new byte[44];
+            byte[] forwardsAudio =  new byte[len - headerLength];
+            byte[] reversedAudio = new byte[len - headerLength];
+            byte[] reversedAudioWithHeader = new byte[len];
+            int bytesPerSample = 2;
+            int lengthWithoutHeader = forwardsAudio.length;
+
+            //copy header info to header file
+            System.arraycopy(wordForward, 0, headers, 0, headerLength);
+            System.arraycopy(wordForward, headerLength, forwardsAudio,0, len - headerLength);
+
+
+            int sampleIdentifier = 0;
+
+            for (int k = 0; k < lengthWithoutHeader; k++)
+            {
+                if (k != 0 && k % bytesPerSample == 0)
+                {
+                    sampleIdentifier += 2 * bytesPerSample;
+                }
+                int index = lengthWithoutHeader - bytesPerSample - sampleIdentifier + k;
+                reversedAudio[k] = forwardsAudio[index];
             }
 
-            //put inversed bytes in buffers array to main array 'music'
-            for (int y = 17; y > music.length - 1; y++) {
-                music[y] = buff[y];
-            }
+            System.arraycopy(headers,0,reversedAudioWithHeader, 0, headerLength);
+            System.arraycopy(reversedAudio, 0, reversedAudioWithHeader,headerLength, reversedAudio.length);
+
+
+
             dis.close();
 
             //write reversed sound to the new file
             OutputStream os = new FileOutputStream(revFileName);
             BufferedOutputStream bos = new BufferedOutputStream(os, 8000);
             DataOutputStream dos = new DataOutputStream(bos);
-            dos.write(music, 0, music.length - 1);
+            dos.write(reversedAudioWithHeader, 0, reversedAudioWithHeader.length - 1);
             dos.flush();
-
+            dos.close();
 
         } catch (IOException ioe) {
 
         }
+    }
+    public int pxToDp(int px){
+        DisplayMetrics displaymetrics = new DisplayMetrics();
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, px,displaymetrics);
     }
 
     @Override
@@ -327,4 +375,5 @@ public class GameFragment extends Fragment {
         super.onDestroyView();
         binding = null;
     }
+
 }

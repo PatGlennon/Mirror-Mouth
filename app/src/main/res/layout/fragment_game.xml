@@ -8,40 +8,91 @@
     tools:context=".ui.game.GameFragment">
 
     <TextView
-        android:id="@+id/word1text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="60dp"
-        android:layout_marginTop="2dp"
+        android:id="@+id/wordtext2"
+        android:layout_width="192dp"
+        android:layout_height="41dp"
+        android:background="@drawable/roundcorner"
+        android:gravity="center"
+        android:maxHeight="48dp"
+        android:minWidth="100dp"
+        android:minHeight="48dp"
         android:text="Testy"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.081" />
+        app:layout_constraintEnd_toEndOf="@id/wordtext1"
+        app:layout_constraintHorizontal_bias="0.118"
+        app:layout_constraintStart_toStartOf="@id/wordtext1"
+        app:layout_constraintTop_toBottomOf="@id/wordtext1"
+        app:layout_constraintVertical_bias="0.031" />
 
     <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/word1record"
+        android:id="@+id/wordplayback2"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:background="@drawable/roundcorner"
-        android:src="@drawable/recordbutton"
-        app:layout_constraintBottom_toBottomOf="@+id/word1text"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.152"
-        app:layout_constraintStart_toEndOf="@+id/word1text"
-        app:layout_constraintTop_toTopOf="@+id/word1text"
-        app:layout_constraintVertical_bias="0.476" />
-
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/word1playback"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
         android:background="@drawable/roundcorner"
         android:src="@drawable/play_circle_24px"
-        app:layout_constraintBottom_toBottomOf="@+id/word1record"
-        app:layout_constraintHorizontal_bias="0.064"
-        app:layout_constraintStart_toEndOf="@+id/word1record"
-        app:layout_constraintTop_toTopOf="@+id/word1record"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintBottom_toBottomOf="@+id/wordrecord2"
+        app:layout_constraintStart_toEndOf="@+id/wordrecord2"
+        app:layout_constraintTop_toTopOf="@+id/wordrecord2"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/wordrecord2"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="20dp"
+        android:background="@drawable/roundcorner"
+        android:src="@drawable/recordbutton"
+        app:layout_constraintBottom_toBottomOf="@+id/wordtext2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.16"
+        app:layout_constraintStart_toEndOf="@+id/wordtext2"
+        app:layout_constraintTop_toTopOf="@+id/wordtext2"
+        app:layout_constraintVertical_bias="0.428" />
+
+    <TextView
+        android:id="@+id/wordtext1"
+        android:layout_width="192dp"
+        android:layout_height="41dp"
+        android:background="@drawable/roundcorner"
+        android:gravity="center"
+        android:maxHeight="48dp"
+        android:minWidth="100dp"
+        android:minHeight="48dp"
+        android:text="Testy"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.164"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.023" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/wordplayback1"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/roundcorner"
+        android:src="@drawable/play_circle_24px"
+        app:layout_constraintBottom_toBottomOf="@+id/wordrecord1"
+        app:layout_constraintStart_toEndOf="@+id/wordrecord1"
+        app:layout_constraintTop_toTopOf="@+id/wordrecord1"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/wordrecord1"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="20dp"
+        android:background="@drawable/roundcorner"
+        android:src="@drawable/recordbutton"
+        app:layout_constraintBottom_toBottomOf="@+id/wordtext1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.16"
+        app:layout_constraintStart_toEndOf="@+id/wordtext1"
+        app:layout_constraintTop_toTopOf="@+id/wordtext1"
+        app:layout_constraintVertical_bias="0.428" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
