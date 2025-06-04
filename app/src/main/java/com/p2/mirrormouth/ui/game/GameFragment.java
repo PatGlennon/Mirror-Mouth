@@ -3,31 +3,31 @@ package com.p2.mirrormouth.ui.game;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.media.AudioRecord;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
-import android.media.MediaRecorder;
-import android.os.Build;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.p2.mirrormouth.MainActivity;
+import com.p2.mirrormouth.MainActivityViewModel;
 import com.p2.mirrormouth.R;
+import com.p2.mirrormouth.classes.WordRowItem;
 import com.p2.mirrormouth.databinding.FragmentGameBinding;
-import com.p2.mirrormouth.classes.wavClass;
+import com.p2.mirrormouth.classes.RecRev;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -38,95 +38,146 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
+import java.util.ArrayList;
 
 public class GameFragment extends Fragment {
 
     private static final String LOG_TAG = "AudioRecordTest";
-
     private FragmentGameBinding binding;
-    private MediaRecorder recorder = null;
-    private AudioRecord audioRecord = null;
-    private String fileName = null;
-    private String revFileName = null;
+    private String filePath = null;
     private MediaPlayer player = null;
-    private wavClass wavRecorder = null;
+    private RecRev recorder = null;
     private Context thisContext = null;
     private Activity thisActivity = null;
-    private Calendar calendar;
-    private ConstraintLayout mConstraintLayout;
+    private ArrayList<WordRowItem> wordItemList = new ArrayList<WordRowItem>();
+    private LinearLayout layout = null;
 
 
 
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        GameViewModel gameViewModel =
-                new ViewModelProvider(this).get(GameViewModel.class);
+        MainActivityViewModel gameViewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
+        //GameViewModel gameViewModel = new ViewModelProvider(this).get(GameViewModel.class);
 
         binding = FragmentGameBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
-        ConstraintLayout layout = binding.layout;
+        layout = binding.layout;
 
         //set context and activity values
         thisContext = getContext();
         thisActivity = getActivity();
 
-        String formattedDate;
-
-        //get calendar
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            LocalDateTime now = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-ddHHmmss");
-            formattedDate = now.format(formatter);
-        }else{
-            formattedDate = String.valueOf(System.currentTimeMillis());
-        }
+        filePath = thisContext.getExternalCacheDir().getAbsolutePath();
 
 
-        fileName = thisContext.getExternalCacheDir().getAbsolutePath();
-        //fileName += "/audiorecordtest"+formattedDate+".wav";
-
-        revFileName = thisContext.getExternalCacheDir().getAbsolutePath();
-        revFileName += "/revtest.wav";
-
-        //Check to make sure recording permissions are set again
-
-
-
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            recorder = new MediaRecorder(requireContext());
-        }
-
-        int numOfRows = 5;
-        for (int i = 1; i <= numOfRows; i++){
-            createWordRow(1,i,layout);
-        }
+//        //create the rows based on user input to be defined later
+//        int numOfRows = 5;
+//        for (int i = 1; i <= numOfRows; i++){
+//            createWordRow(1,i,layout);
+//        }
+//
+//        Log.println(Log.ERROR,"tag","Is Empty - "+ gameViewModel.getArrayList().isEmpty());
+//
+//        if (!gameViewModel.getArrayList().isEmpty()){
+//            wordItemList.clear();
+//            wordItemList.addAll(gameViewModel.getArrayList());
+//        }
+//
+//
+//        setOnClickListeners();
+//
+//        //on rotate or change state, if recording exists - set play button to enabled
+//        for (WordRowItem item : wordItemList){
+//            Log.println(Log.ERROR,"tag", item.toString());
+//            if (item.getForwardLength() != 0){
+//                root.findViewById(item.getPlayButtonID()).setEnabled(true);
+//            }
+//        }
 
 
         return root;
     }
 
-    private void createWordRow(int team, int rowNum, ConstraintLayout layout){
+
+
+    @Override
+    public void onStart(){
+        MainActivityViewModel gameViewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
+        View root = binding.getRoot();
+
+        //create the rows based on user input to be defined later
+        int numOfRows = 5;
+        for (int i = 1; i <= numOfRows; i++){
+            createWordRow(1,i,layout);
+        }
+
+        Log.println(Log.ERROR,"tag","Is Empty - "+ gameViewModel.getArrayList().isEmpty());
+
+        for (WordRowItem item : gameViewModel.getArrayList()){
+            Log.println(Log.ERROR,"copy?", item.toString());
+            if (item.getForwardLength() != 0){
+                root.findViewById(item.getPlayButtonID()).setEnabled(true);
+            }
+        }
+
+        if (!gameViewModel.getArrayList().isEmpty()){
+            wordItemList.clear();
+            wordItemList.addAll(gameViewModel.getArrayList());
+        }
+
+
+        setOnClickListeners();
+
+        //on rotate or change state, if recording exists - set play button to enabled
+        for (WordRowItem item : wordItemList){
+            Log.println(Log.ERROR,"tag", item.toString());
+            if (item.getForwardLength() != 0){
+                root.findViewById(item.getPlayButtonID()).setEnabled(true);
+            }
+        }
+
+        addSubmitButton();
+
+        super.onStart();
+    }
+
+    private void addSubmitButton(){
+        LinearLayout submitButtonLayout = new LinearLayout(thisContext);
+        Button submitButton = new Button(thisContext);
+
+        LinearLayout.LayoutParams linearLayoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(48)
+        );
+
+    }
+
+
+    private void createWordRow(int team, int rowNum, LinearLayout layout){
         LinearLayout buttonLayout = new LinearLayout(thisContext);
         TextView word = new TextView(thisContext);
-        RecordButton recordButton = new RecordButton(thisContext);
-        PlayButton playButton = new PlayButton(thisContext);
+
+        ImageButton recordButton = new ImageButton(thisContext);
+        ImageButton playButton = new ImageButton(thisContext);
+
         int rowId = 100*rowNum;
         int teamId = 1000*team;
 
-        int previousButtonLayoutId = 0;
+        String forwardsFileName = "/" + teamId+rowId + "forwards.wav";
+        String backwardsFileName = "/" + teamId+rowId + "backwards.wav";
 
-        if (rowNum != 1){
-            previousButtonLayoutId = (100 * (rowNum - 1)) + (1000 * team);
-        }
+        String rowWord = "Miller Lite";
 
-        ConstraintLayout.LayoutParams linearLayoutParams = new ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.MATCH_PARENT,
-                ConstraintLayout.LayoutParams.WRAP_CONTENT
+
+        LinearLayout.LayoutParams linearLayoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
         );
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                 0,
@@ -138,18 +189,8 @@ public class GameFragment extends Fragment {
                 dpToPx(48)
         );
 
-        //set params for word
+        //set params for container
         linearLayoutParams.topMargin = dpToPx(5);
-        linearLayoutParams.orientation = LinearLayout.HORIZONTAL;
-        linearLayoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
-        linearLayoutParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
-        if (rowNum == 1){
-            linearLayoutParams.topToBottom = R.id.teamTitle;
-        } else{
-            linearLayoutParams.topToBottom = previousButtonLayoutId;
-        }
-
-
 
         //set params for word
         textParams.leftMargin = dpToPx(2);
@@ -163,7 +204,9 @@ public class GameFragment extends Fragment {
         //set layout params for the Linear Layout
         buttonLayout.setBackgroundResource(R.drawable.item_background);
         buttonLayout.setMinimumHeight(48);
+        buttonLayout.setPadding(dpToPx(5),dpToPx(5),dpToPx(5),dpToPx(5));
         buttonLayout.setElevation(2);
+        buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
 
         //Set layout params for Word TextArea
         word.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
@@ -180,25 +223,22 @@ public class GameFragment extends Fragment {
         //set layout params for play button
         playButton.setImageResource(R.drawable.play_circle_24px);
         playButton.setBackgroundResource(R.drawable.roundcorner);
+        playButton.setEnabled(false);
+
+
 
         //Set Unique IDs for the items
-        int layoutId = teamId=rowId+0;
-        int wordId = teamId+rowId+1;
-        int recordId = teamId+rowId+2;
-        int playId = teamId+rowId+3;
+        int layoutId = teamId + rowId + 1;
+        int wordId = teamId + rowId + 2;
+        int recordId = teamId + rowId + 3;
+        int playId = teamId + rowId + 4;
 
         buttonLayout.setId(layoutId);
         word.setId(wordId);
         recordButton.setId(recordId);
         playButton.setId(playId);
 
-        ConstraintSet constraintSet = new ConstraintSet();
-
-
-
-
-
-        word.setText("Program Word");
+        word.setText(rowWord);
 
         //Add to layout - will need more logic for later rows
         layout.addView(buttonLayout, linearLayoutParams);
@@ -206,117 +246,186 @@ public class GameFragment extends Fragment {
         buttonLayout.addView(recordButton, buttonParams);
         buttonLayout.addView(playButton, buttonParams);
 
-        //constraintSet.connect(layoutId, ConstraintSet.TOP, R.id.teamTitle, ConstraintSet.BOTTOM);
-        //constraintSet.applyTo(buttonLayout);
+        //Add to ArrayList of WordRowItems
+        WordRowItem currentItem = new WordRowItem(rowId, teamId, layoutId, wordId, playId, recordId, rowWord);
+        currentItem.setFilePath(filePath);
+        currentItem.setForwardsFileName(forwardsFileName);
+        currentItem.setBackwardsFileName(backwardsFileName);
+
+        wordItemList.add(currentItem);
 
     }
 
+    private void setOnClickListeners(){
+        for (WordRowItem item : wordItemList) {
+            //get the view with all new stuff added
+            View root = binding.getRoot();
+
+            ImageButton recordButton = (ImageButton) root.findViewById(item.getRecordButtonID());
+            ImageButton playButton = (ImageButton) root.findViewById(item.getPlayButtonID());
+
+            recordButton.setOnClickListener(new View.OnClickListener() {
+
+                @RequiresPermission(Manifest.permission.RECORD_AUDIO)
+                public void onClick(View v) {
+                    onRecord(item.isReadyToRecord(), item.getFilePath(), item.getForwardsFileName());
+                    if (item.isReadyToRecord()) {
+                        //If button clicked and started recording do this
+                        recordButton.setImageResource(R.drawable.stop_circle_24px);
+
+                        disableRecordButtons(item.getRowID());
+
+                        //set logic to disable all other record buttons - from array or button IDs?
+                    } else {
+                        //re-enable record buttons
+                        enableRecordButtons();
+
+                        recordButton.setImageResource(R.drawable.recordbutton);
+                        //after recording, reverse sound clip, maybe not best to do here?
+                        try {
+                            reverseSound(item.getFilePath(), item.getForwardsFileName(), item.getBackwardsFileName());
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        //get audio file lengths
+                        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+
+                        //Forward Length
+                        Uri uri = Uri.parse(item.getFilePath() + item.getForwardsFileName());
+                        mmr.setDataSource(thisContext, uri);
+                        String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                        int forwardLength = Integer.parseInt(durationStr);
+                        item.setForwardLength(forwardLength);
+
+                        //Backward Length
+                        uri = Uri.parse(item.getFilePath() + item.getBackwardsFileName());
+                        mmr.setDataSource(thisContext, uri);
+                        durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                        int backwardsLength = Integer.parseInt(durationStr);
+                        item.setBackwardsLength(backwardsLength);
+
+                        //set logic to re-enable all other buttons - from array or button IDs?
+                        item.setReadyToPlay(true);
+                        playButton.setEnabled(true);
+                    }
+                    item.setReadyToRecord(!item.isReadyToRecord());
+                }
+            });
+
+            playButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    if (item.isReadyToPlay()) {
+                        //Change Icon - set ready to false
+                        playButton.setImageResource(R.drawable.stop_circle_24px);
+                        item.setReadyToPlay(false);
+
+                        //disable all other play buttons
+                        disablePlayButtons(item.getRowID());
+
+                        //instantiate media player and set on completion listener to change icon back after file finishes playing
+                        player = new MediaPlayer();
+                        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mediaPlayer) {
+                                player.release();
+                                player = null;
+                                playButton.setImageResource(R.drawable.play_circle_24px);
+                                item.setReadyToPlay(true);
+
+                                //re-enable all play buttons with media files
+                                enablePlayButtons();
+
+                            }
+                        });
+                        try {
+                            player.setDataSource(item.getFilePath() + item.getBackwardsFileName());
+                            player.prepare();
+                            player.start();
+                        } catch (IOException e) {
+                            Log.e(LOG_TAG, "prepare() failed");
+                        }
+
+                    } else {
+                        player.release();
+                        player = null;
+                        playButton.setImageResource(R.drawable.play_circle_24px);
+                        item.setReadyToPlay(true);
+
+                        //re-enable all play buttons with media files
+                        enablePlayButtons();
+                    }
+                }
+            });
+        }
+
+    }
+
+    private void disableRecordButtons(int rowId){
+        //get the view with all new stuff added
+        View root = binding.getRoot();
+
+        for (WordRowItem item : wordItemList){
+            if (item.getRowID() != rowId){
+                root.findViewById(item.getRecordButtonID()).setEnabled(false);
+            }
+        }
+    }
+
+    private void enableRecordButtons(){
+        //get the view with all new stuff added
+        View root = binding.getRoot();
+
+        for (WordRowItem item : wordItemList){
+            root.findViewById(item.getRecordButtonID()).setEnabled(true);
+        }
+    }
+
+    private void disablePlayButtons(int rowId){
+        //get the view with all new stuff added
+        View root = binding.getRoot();
+
+        for (WordRowItem item : wordItemList){
+            if (item.getRowID() != rowId){
+                root.findViewById(item.getPlayButtonID()).setEnabled(false);
+            }
+        }
+    }
+    private void enablePlayButtons(){
+        //get the view with all new stuff added
+        View root = binding.getRoot();
+
+        for (WordRowItem item : wordItemList){
+            if (item.getForwardLength() != 0) {
+                root.findViewById(item.getPlayButtonID()).setEnabled(true);
+            }
+        }
+    }
+
+
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-    private void onRecord(boolean start) {
+    private void onRecord(boolean start, String wavFilePath, String wavFileName) {
         if (start) {
-            startRecording();
+            startRecording(wavFilePath, wavFileName);
         } else {
             stopRecording();
         }
     }
 
-    private void onPlay(boolean start) {
-        if (start) {
-            startPlaying();
-        } else {
-            stopPlaying();
-        }
-    }
-    private void startPlaying() {
-        player = new MediaPlayer();
-        try {
-            player.setDataSource(revFileName);
-            player.prepare();
-            player.start();
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "prepare() failed");
-        }
-    }
-
-    private void stopPlaying() {
-        player.release();
-        player = null;
-    }
-
-
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-    private void startRecording() {
-        wavRecorder = new wavClass(fileName);
-        wavRecorder.startRecording();
+    private void startRecording(String wavFilePath, String wavFileName) {
+        recorder = new RecRev(wavFilePath, wavFileName);
+        recorder.startRecording();
     }
 
     private void stopRecording() {
-        wavRecorder.stopRecording();
-
-        try {
-            reverseSound();
-        } catch (InterruptedException e) {
-            Log.e("Reverse","Reverse Failed");
-            throw new RuntimeException(e);
-        }
+        recorder.stopRecording();
     }
 
-    class RecordButton extends androidx.appcompat.widget.AppCompatImageButton {
-        boolean mStartRecording = true;
-
-        OnClickListener clicker = new OnClickListener() {
-            @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-            public void onClick(View v) {
-                onRecord(mStartRecording);
-                if (mStartRecording) {
-                    setImageResource(R.drawable.stop_circle_24px);
-                } else {
-                    setImageResource(R.drawable.recordbutton);
-                    //after recording, reverse sound clip, maybe not best to do here?
-                    try {
-                        reverseSound();
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                mStartRecording = !mStartRecording;
-            }
-        };
-
-        public RecordButton(Context ctx) {
-            super(ctx);
-            setImageResource(R.drawable.recordbutton);
-
-            setOnClickListener(clicker);
-        }
-    }
-
-    class PlayButton extends androidx.appcompat.widget.AppCompatImageButton {
-        boolean mStartPlaying = true;
-
-        OnClickListener clicker = new OnClickListener() {
-            public void onClick(View v) {
-                onPlay(mStartPlaying);
-                if (mStartPlaying) {
-                    setImageResource(R.drawable.stop_circle_24px);
-                } else {
-                    setImageResource(R.drawable.play_circle_24px);
-                }
-                mStartPlaying = !mStartPlaying;
-            }
-        };
-
-        public PlayButton(Context ctx) {
-            super(ctx);
-            setImageResource(R.drawable.play_circle_24px);
-            setOnClickListener(clicker);
-        }
-    }
     @Override
     public void onStop() {
         super.onStop();
         if (recorder != null) {
-            recorder.release();
             recorder = null;
         }
 
@@ -326,11 +435,11 @@ public class GameFragment extends Fragment {
         }
     }
 
-    private void reverseSound() throws InterruptedException{
+    private void reverseSound(String filePath, String forwardsFileName, String backwardsFileName) throws InterruptedException{
         try {
 
             //Reading file to byte array wordForward
-            InputStream in = new FileInputStream(fileName+"/final_record.wav");
+            InputStream in = new FileInputStream(filePath+forwardsFileName);
             byte[] wordForward = new byte[in.available()];
             BufferedInputStream bis = new BufferedInputStream(in, 8000);
             DataInputStream dis = new DataInputStream(bis);
@@ -346,7 +455,7 @@ public class GameFragment extends Fragment {
             int headerLength = 44;
             byte[] output = new byte[len];
             byte[] headers = new byte[44];
-            byte[] forwardsAudio =  new byte[len - headerLength];
+            byte[] forwardsAudio = new byte[len - headerLength];
             byte[] reversedAudio = new byte[len - headerLength];
             byte[] reversedAudioWithHeader = new byte[len];
             int bytesPerSample = 2;
@@ -377,7 +486,7 @@ public class GameFragment extends Fragment {
             dis.close();
 
             //write reversed sound to the new file
-            OutputStream os = new FileOutputStream(revFileName);
+            OutputStream os = new FileOutputStream(filePath+backwardsFileName);
             BufferedOutputStream bos = new BufferedOutputStream(os, 8000);
             DataOutputStream dos = new DataOutputStream(bos);
             dos.write(reversedAudioWithHeader, 0, reversedAudioWithHeader.length - 1);
@@ -396,6 +505,13 @@ public class GameFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        //GameViewModel gameViewModel = new ViewModelProvider(this).get(GameViewModel.class);
+        MainActivityViewModel gameViewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
+
+        gameViewModel.setArray(wordItemList);
+
+        Log.println(Log.ERROR,"Destroyed","GameFragment Destroyed");
+
         binding = null;
     }
 

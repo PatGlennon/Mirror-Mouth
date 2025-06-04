@@ -12,6 +12,7 @@ import com.google.android.material.navigation.NavigationView;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -28,10 +29,13 @@ public class MainActivity extends AppCompatActivity {
     private AppBarConfiguration mAppBarConfiguration;
     private ActivityMainBinding binding;
     public static final int REQUEST_AUDIO_PERMISSION_CODE = 200;
+    public MainActivityViewModel mainActivityViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mainActivityViewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
 
 
         //Check for recording Permissions
@@ -48,9 +52,14 @@ public class MainActivity extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_rules, R.id.nav_game, R.id.nav_settings)
+                R.id.nav_game)
                 .setOpenableLayout(drawer)
                 .build();
+
+//        mAppBarConfiguration = new AppBarConfiguration.Builder(
+//                R.id.nav_rules, R.id.nav_game, R.id.nav_settings)
+//                .setOpenableLayout(drawer)
+//                .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);

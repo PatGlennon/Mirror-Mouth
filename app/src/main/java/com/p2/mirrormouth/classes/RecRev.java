@@ -12,10 +12,10 @@ import java.io.IOException;
 
 import androidx.annotation.RequiresPermission;
 
-public class wavClass {
+public class RecRev {
     String filePath = null;
     String tempRawFile = "temp_record.raw";
-    String tempWavFile = "final_record.wav";
+    String outputFile = null;
     final int bpp = 16;
     int sampleRate = 44100;
     int channel = AudioFormat.CHANNEL_IN_STEREO;
@@ -24,9 +24,10 @@ public class wavClass {
     int bufferSize = 0;
     Thread recordingThread;
     boolean isRecording = false;
-    public wavClass(String path){
+    public RecRev(String path, String outputFile){
         try{
             filePath = path;
+            this.outputFile = outputFile;
             bufferSize = AudioRecord.getMinBufferSize(8000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
         }
         catch (Exception e){
@@ -166,7 +167,7 @@ public class wavClass {
                 }
                 recorder.release();
                 recordingThread = null;
-                createWavFile(getPath(tempRawFile),getPath(tempWavFile));
+                createWavFile(getPath(tempRawFile),getPath(outputFile));
             }
         }
         catch (Exception e){
