@@ -1,4 +1,4 @@
-package com.p2.mirrormouth.ui.game;
+package com.p2.mirrormouth.ui.cabin;
 
 import android.Manifest;
 import android.app.Activity;
@@ -19,16 +19,12 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresPermission;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-
 import com.p2.mirrormouth.MainActivityViewModel;
 import com.p2.mirrormouth.R;
-import com.p2.mirrormouth.classes.WordRowItem;
-import com.p2.mirrormouth.databinding.FragmentGameBinding;
 import com.p2.mirrormouth.classes.RecRev;
+import com.p2.mirrormouth.classes.WordRowItem;
+import com.p2.mirrormouth.databinding.FragmentCabinBinding;
+import com.p2.mirrormouth.databinding.FragmentGameBinding;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -41,10 +37,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 
-public class GameFragment extends Fragment {
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+
+public class CabinFragment extends Fragment {
 
     private static final String LOG_TAG = "AudioRecordTest";
-    private FragmentGameBinding binding;
+    private FragmentCabinBinding binding;
     private String filePath = null;
     private MediaPlayer player = null;
     private RecRev recorder = null;
@@ -63,7 +64,7 @@ public class GameFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         mainActivityViewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
 
-        binding = FragmentGameBinding.inflate(inflater, container, false);
+        binding = FragmentCabinBinding.inflate(inflater, container, false);
         root = binding.getRoot();
         layout = binding.layout;
 
@@ -88,11 +89,7 @@ public class GameFragment extends Fragment {
     public void onResume(){
         Log.println(Log.ERROR,"Resumed","GameFragment Resumed");
 
-        if (!mainActivityViewModel.isStarted()){
-            newGame();
-        }else{
-            startNewMultiLineGame(5);
-        }
+        startNewMultiLineGame(5);
 
         super.onResume();
     }
@@ -162,10 +159,7 @@ public class GameFragment extends Fragment {
         frameParams.gravity = Gravity.CENTER;
         buttonParams.gravity = Gravity.CENTER;
 
-        newGameButton.requestApplyInsets();
-
         newGameButton.setBackgroundResource(R.drawable.new_game_background);
-        newGameButton.setPadding(dpToPx(8),dpToPx(8),dpToPx(8),dpToPx(8));
         newGameButton.setGravity(Gravity.CENTER);
         newGameButton.setTextSize(25);
         newGameButton.setElevation(dpToPx(2));

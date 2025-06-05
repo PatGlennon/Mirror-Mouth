@@ -9,5 +9,7 @@
 
     <string name="menu_rules">RULES</string>
     <string name="menu_game">MIRROR MOUTH</string>
+    <string name="menu_cabin">CABIN VERSION</string>
     <string name="menu_settings">SETTINGS</string>
+    <string name="submit">SUBMIT</string>
 </resources>

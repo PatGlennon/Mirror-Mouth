@@ -1,18 +1,17 @@
-package com.p2.mirrormouth.ui.game;
+package com.p2.mirrormouth.ui.cabin;
 
 import com.p2.mirrormouth.classes.WordRowItem;
 
 import java.util.ArrayList;
 
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class GameViewModel extends ViewModel {
+public class CabinViewModel extends ViewModel {
 
     private final MutableLiveData<ArrayList<WordRowItem>> wordItemList;
 
-    public GameViewModel() {
+    public CabinViewModel() {
         wordItemList = new MutableLiveData<>();
         wordItemList.setValue(new ArrayList<WordRowItem>());
     }

@@ -13,6 +13,10 @@
             android:icon="@drawable/stadia_controller_24px"
             android:title="@string/menu_game" />
         <item
+            android:id="@+id/nav_cabin"
+            android:icon="@drawable/ic_cabin"
+            android:title="@string/menu_cabin" />
+        <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/settings_24px"
             android:title="@string/menu_settings" />

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_game">
+    app:startDestination="@+id/nav_cabin">
 
     <fragment
         android:id="@+id/nav_rules"
@@ -17,6 +17,12 @@
         android:layout_gravity="center"
         android:label="@string/menu_game"
         tools:layout="@layout/fragment_game" />
+    <fragment
+        android:id="@+id/nav_cabin"
+        android:name="com.p2.mirrormouth.ui.cabin.CabinFragment"
+        android:layout_gravity="center"
+        android:label="@string/menu_cabin"
+        tools:layout="@layout/fragment_cabin" />
 
     <fragment
         android:id="@+id/nav_settings"
