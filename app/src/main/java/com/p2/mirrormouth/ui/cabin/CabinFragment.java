@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.p2.mirrormouth.MainActivityViewModel;
 import com.p2.mirrormouth.R;
@@ -537,28 +538,38 @@ public class CabinFragment extends Fragment {
             lockInButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     LinearLayout row = (LinearLayout) root.findViewById(item.getButtonLayoutId());
+
+
+
                     if (gameState == 0){
                         item.setWord(word.getText().toString());
-                        word.setEnabled(false);
-                        root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
+                        if (item.getWord() != null && !item.getWord().isEmpty()) {
+                            word.setEnabled(false);
+                            root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
 
-                        item.setLockedIn(true);
+                            item.setLockedIn(true);
 
-                        if (allLockedIn()){
-                            layout.findViewById(R.id.submit).setEnabled(true);
+                            if (allLockedIn()) {
+                                layout.findViewById(R.id.submit).setEnabled(true);
+                            }
+                        }else{
+                            Toast.makeText(thisContext,"Missing Word",Toast.LENGTH_SHORT).show();
                         }
                     }else{
                         item.setGuessWord(word.getText().toString());
-                        word.setEnabled(false);
-                        root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
+                        if (item.getGuessWord() != null && !item.getGuessWord().isEmpty()) {
+                            word.setEnabled(false);
+                            root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
 
-                        item.setLockedIn(true);
+                            item.setLockedIn(true);
 
-                        if (allLockedIn()){
-                            layout.findViewById(R.id.submit).setEnabled(true);
+                            if (allLockedIn()) {
+                                layout.findViewById(R.id.submit).setEnabled(true);
+                            }
+                        }else{
+                            Toast.makeText(thisContext,"Missing Word",Toast.LENGTH_SHORT).show();
                         }
                     }
-
                 }
             });
         }
