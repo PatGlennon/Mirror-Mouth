@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:id="@+id/row"
+android:layout_marginTop="5dp"
+android:orientation="vertical">
+
+<EditText
+    android:id="@+id/word"
+    android:background="@drawable/item_background"
+    android:layout_width="match_parent"
+    android:paddingStart="5dp"
+    android:textColor="@color/black"
+    android:layout_weight="1"
+    android:textSize="25sp"
+    android:layout_marginStart="2dp"
+    android:layout_marginEnd="2dp"
+    android:layout_height="wrap_content"
+    android:hint="Enter Word Here"
+    android:textColorHint="@color/gray"/>
+
+
+
+<LinearLayout
+    android:id="@+id/button_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+    <Button
+        android:id="@+id/listen"
+        android:layout_width="0dp"
+        android:layout_marginStart="2dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="LISTEN"
+        android:visibility="gone" />
+    <Button
+        android:id="@+id/record"
+        android:layout_width="0dp"
+        android:layout_marginStart="2dp"
+        android:layout_marginEnd="2dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="@string/record" />
+    <Button
+        android:id="@+id/playReverse"
+        android:layout_width="0dp"
+        android:layout_marginEnd="2dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:text="@string/reverse"
+        android:enabled="false"/>
+    <Button
+        android:id="@+id/lock"
+        android:layout_marginEnd="2dp"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:text="LOCK IN"
+        android:enabled="false"/>
+
+</LinearLayout>
+
+</LinearLayout>

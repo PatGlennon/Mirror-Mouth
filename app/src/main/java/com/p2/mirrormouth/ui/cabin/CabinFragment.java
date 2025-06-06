@@ -9,22 +9,18 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputFilter;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import com.p2.mirrormouth.MainActivityViewModel;
 import com.p2.mirrormouth.R;
+import com.p2.mirrormouth.classes.CabinItem;
 import com.p2.mirrormouth.classes.RecRev;
-import com.p2.mirrormouth.classes.WordRowItem;
 import com.p2.mirrormouth.databinding.FragmentCabinBinding;
-import com.p2.mirrormouth.databinding.FragmentGameBinding;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -51,11 +47,12 @@ public class CabinFragment extends Fragment {
     private RecRev recorder = null;
     private Context thisContext = null;
     private Activity thisActivity = null;
-    private ArrayList<WordRowItem> wordItemList = new ArrayList<WordRowItem>();
+    private ArrayList<CabinItem> rowList = new ArrayList<CabinItem>();
     private LinearLayout layout = null;
     private MainActivityViewModel mainActivityViewModel;
     private View root;
     private Boolean gameStarted = false;
+    private Integer gameState = 0;
 
 
 
@@ -74,7 +71,7 @@ public class CabinFragment extends Fragment {
 
         filePath = thisContext.getExternalCacheDir().getAbsolutePath();
 
-
+        playGame();
 
 
         return root;
@@ -89,9 +86,71 @@ public class CabinFragment extends Fragment {
     public void onResume(){
         Log.println(Log.ERROR,"Resumed","GameFragment Resumed");
 
-        startNewMultiLineGame(5);
 
         super.onResume();
+    }
+
+    public void playGame(){
+        gameState = mainActivityViewModel.getState();
+
+        startMultiLineGame(2, gameState);
+    }
+
+
+    public void addRow(int rowNum){
+        LinearLayout row = (LinearLayout) thisActivity.getLayoutInflater().inflate(R.layout.row_layout,layout);
+
+        int rowId = 100 * rowNum;
+
+        EditText word = (EditText) row.findViewById(R.id.word);
+
+        LinearLayout buttonLayout = (LinearLayout) row.findViewById(R.id.button_layout);
+
+        Button listenButton = row.findViewById(R.id.listen);
+        Button recordButton = row.findViewById(R.id.record);
+        Button reverseButton = row.findViewById(R.id.playReverse);
+        Button lockInButton = row.findViewById(R.id.lock);
+
+        word.setFilters(new InputFilter[] {new InputFilter.AllCaps()});
+
+        //Set Unique IDs for the items
+        int buttonLayoutId = rowId + 1;
+        int wordId = rowId + 2;
+        int recordId = rowId + 3;
+        int playId = rowId + 4;
+        int reverseId = rowId + 5;
+        int lockId = rowId + 6;
+
+        String forwardsFileName = "/" + rowNum + "forwards.wav";
+        String backwardsFileName = "/" + rowNum + "backwards.wav";
+        String forwardsGuessFileName = "/" + rowNum + "forwardsguess.wav";
+        String backwardsGuessFileName = "/" + rowNum + "backwardsguess.wav";
+
+        CabinItem currentItem = new CabinItem(row, rowNum, filePath, forwardsFileName, backwardsFileName);
+
+        currentItem.setForwardsGuessFileName(forwardsGuessFileName);
+        currentItem.setBackwardsGuessFileName(backwardsGuessFileName);
+
+        //Change IDs so there's no overlap
+        row.setId(rowId);
+        buttonLayout.setId(buttonLayoutId);
+        word.setId(wordId);
+        recordButton.setId(recordId);
+        listenButton.setId(playId);
+        reverseButton.setId(reverseId);
+        lockInButton.setId(lockId);
+
+        //Add IDs to CabinItem
+        currentItem.setRowId(rowId);
+        currentItem.setButtonLayoutId(buttonLayoutId);
+        currentItem.setWordId(wordId);
+        currentItem.setRecordId(recordId);
+        currentItem.setPlayId(playId);
+        currentItem.setReverseId(reverseId);
+        currentItem.setLockId(lockId);
+
+        rowList.add(currentItem);
+
     }
 
     @Override
@@ -101,283 +160,258 @@ public class CabinFragment extends Fragment {
         super.onStart();
     }
 
-    private void newGame(){
-        addNewGameButton();
-    }
-
-    private void generateNewGameSettingsLayout(){
-
-    }
-
-    private void startNewMultiLineGame(int numOfRows){
+    private void startMultiLineGame(int numOfRows, int gameState){
         //create the rows based on user input to be defined later
-        for (int i = 1; i <= numOfRows; i++){
-            createWordRow(1,i,layout);
+        if (gameState != 2) {
+            for (int i = 1; i <= numOfRows; i++) {
+                addRow(i);
+            }
         }
 
         //Update recreated view with old array values
-        if (!mainActivityViewModel.getArrayList().isEmpty()){
-            wordItemList = new ArrayList<WordRowItem>(mainActivityViewModel.getArrayList());
+        if (!mainActivityViewModel.getCabinList().isEmpty()){
+            rowList = new ArrayList<CabinItem>(mainActivityViewModel.getCabinList());
         }
 
+        //if recording found, re-enable all buttons - necessary for state changes
+        for (CabinItem item : rowList){
+            switch (gameState){
+                case 0:
+                    if (item.isReadyToPlay()){
+                        root.findViewById(item.getPlayId()).setEnabled(true);
+                        root.findViewById(item.getReverseId()).setEnabled(true);
+                        root.findViewById(item.getLockId()).setEnabled(true);
+                    }
+                    if (item.isLockedIn()){
+                        root.findViewById(item.getWordId()).setEnabled(false);
+                        root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
+                    }
+                    break;
+                case 1:
+                    //On guess round hide play and record buttons.
+                    root.findViewById(item.getReverseId()).setEnabled(true);
+                    root.findViewById(item.getLockId()).setEnabled(true);
+                    root.findViewById(item.getPlayId()).setVisibility(View.GONE);
+                    root.findViewById(item.getRecordId()).setVisibility(View.GONE);
+                    if (item.isLockedIn()) {
+                        root.findViewById(item.getWordId()).setEnabled(false);
+                        root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
+                    }
+                    break;
+                case 2:
+                    break;
 
-        for (WordRowItem item : wordItemList){
-            if (item.getForwardLength() != 0){
-                root.findViewById(item.getPlayButtonID()).setEnabled(true);
             }
+
         }
 
         setOnClickListeners();
-
-        //on rotate or change state, if recording exists - set play button to enabled
-        for (WordRowItem item : wordItemList){
-            Log.println(Log.ERROR,"Set Enabledses", item.toString());
-            if (item.getForwardLength() != 0){
-                root.findViewById(item.getPlayButtonID()).setEnabled(true);
-            }
-        }
-
         addSubmitButton();
     }
-
     private void addNewGameButton(){
-        FrameLayout newGameFrame = new FrameLayout(thisContext);
-        Button newGameButton = new Button(thisContext);
+        LinearLayout row = (LinearLayout) thisActivity.getLayoutInflater().inflate(R.layout.new_game_button,layout);
+        Button newGameButton = row.findViewById(R.id.new_game_button);
 
-        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-        );
+        newGameButton.setOnClickListener(new View.OnClickListener() {
 
-        FrameLayout.LayoutParams buttonParams = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-        );
-
-        newGameFrame.setForegroundGravity(Gravity.CENTER);
-
-        frameParams.gravity = Gravity.CENTER;
-        buttonParams.gravity = Gravity.CENTER;
-
-        newGameButton.setBackgroundResource(R.drawable.new_game_background);
-        newGameButton.setGravity(Gravity.CENTER);
-        newGameButton.setTextSize(25);
-        newGameButton.setElevation(dpToPx(2));
-        newGameButton.setText("New Game");
-
-        newGameButton.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v) {
-                layout.removeAllViews();
-                startNewMultiLineGame(5);
-                gameStarted = true;
+                resetGame();
+
             }
         });
+    }
 
-        layout.addView(newGameFrame,frameParams);
-        newGameFrame.addView(newGameButton, buttonParams);
+    private void resetGame(){
+        gameState = 0;
+        mainActivityViewModel.setState(0);
+        for (CabinItem item : rowList){
+            item.getLayout().removeAllViewsInLayout();
+        }
 
+        mainActivityViewModel.setCabinArray(new ArrayList<CabinItem>());
+        rowList = new ArrayList<CabinItem>();
+        playGame();
     }
 
     private void addSubmitButton(){
+        LinearLayout row = (LinearLayout) thisActivity.getLayoutInflater().inflate(R.layout.submit_button,layout);
+        Button submitButton = row.findViewById(R.id.submit);
 
-        Button submitButton = new Button(thisContext);
+        submitButton.setOnClickListener(new View.OnClickListener() {
 
+            public void onClick(View v) {
+                switch(gameState){
+                    case 0:
+                        for (CabinItem item : rowList){
+                            //Hide answer and re-enable EditText
+                            EditText word = root.findViewById(item.getWordId());
+                            word.setText("");
+                            word.setEnabled(true);
+                            //make the button layout visible again but hide the Play and Record buttons
+                            root.findViewById(item.getButtonLayoutId()).setVisibility(View.VISIBLE);
+                            root.findViewById(item.getPlayId()).setVisibility(View.VISIBLE);
+                            root.findViewById(item.getReverseId()).setEnabled(false);
+                            //reset lockedIn and disable submit button
+                            item.setLockedIn(false);
+                            submitButton.setEnabled(false);
+                        }
+                        gameState = 1;
+                        break;
+                    case 1:
+                        for (CabinItem item : rowList) {
+                            EditText word = root.findViewById(item.getWordId());
+                            String correct = item.getWord()+"="+item.getGuessWord();
+                            String wrong = item.getWord()+"=/="+item.getGuessWord();
 
-        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                dpToPx(48)
-        );
+                            if (item.getWord().equals(item.getGuessWord())){
+                                word.setText(correct);
+                                word.setTextColor(getResources().getColor(R.color.play));
+                            }else{
+                                word.setText(wrong);
+                                word.setTextColor(getResources().getColor(R.color.stop));
+                            }
+                        }
+                        root.findViewById(R.id.submit).setVisibility(View.GONE);
+                        addNewGameButton();
+                        break;
+                    case 2:
+                        gameState = 0;
+                }
+            }
+        });
 
-        //set params for container
-        buttonParams.topMargin = dpToPx(5);
-        buttonParams.leftMargin = dpToPx(2);
-        buttonParams.rightMargin = dpToPx(2);
-
-        int buttonId = 9999;
-
-        submitButton.setPadding(dpToPx(5),dpToPx(5),dpToPx(5),dpToPx(5));
-        submitButton.setId(buttonId);
-        submitButton.setBackgroundResource(R.drawable.new_game_background);
-        submitButton.setText(R.string.submit);
-        submitButton.setTextColor(thisActivity.getColor(R.color.white));
-        submitButton.setTextSize(25);
-
-        layout.addView(submitButton, buttonParams);
-
-    }
-
-
-    private void createWordRow(int team, int rowNum, LinearLayout layout){
-        LinearLayout buttonLayout = new LinearLayout(thisContext);
-        //TextView word = new TextView(thisContext);
-        EditText word = new EditText(thisContext);
-
-        ImageButton recordButton = new ImageButton(thisContext);
-        ImageButton playButton = new ImageButton(thisContext);
-
-        int rowId = 100*rowNum;
-        int teamId = 1000*team;
-
-        String forwardsFileName = "/" + teamId+rowId + "forwards.wav";
-        String backwardsFileName = "/" + teamId+rowId + "backwards.wav";
-
-        String rowWord = "Miller Lite";
-
-
-        LinearLayout.LayoutParams linearLayoutParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
-                0,
-                dpToPx(48),
-                1
-        );
-        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
-                dpToPx(48),
-                dpToPx(48)
-        );
-
-        //set params for container
-        linearLayoutParams.topMargin = dpToPx(5);
-
-        //set params for word
-        textParams.leftMargin = dpToPx(2);
-        textParams.rightMargin = dpToPx(2);
-
-        //set params for buttons
-        buttonParams.leftMargin = dpToPx(2);
-        buttonParams.rightMargin = dpToPx(2);
-
-
-        //set layout params for the Linear Layout
-        buttonLayout.setBackgroundResource(R.drawable.item_background);
-        buttonLayout.setMinimumHeight(48);
-        buttonLayout.setPadding(dpToPx(5),dpToPx(5),dpToPx(5),dpToPx(5));
-        buttonLayout.setElevation(dpToPx(2));
-        buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-
-        //Set layout params for Word TextArea
-        word.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_START);
-        word.setTextColor(thisActivity.getColor(R.color.black));
-        word.setPadding(dpToPx(5),0,0,0);
-        word.setFilters(new InputFilter[] {new InputFilter.AllCaps()});
-        word.setGravity(Gravity.CENTER);
-        word.setTextSize(25);
-
-        //set layout params for record button
-        recordButton.setImageResource(R.drawable.mic_24px);
-        recordButton.setBackgroundResource(R.drawable.roundcorner);
-
-        //set layout params for play button
-        playButton.setImageResource(R.drawable.play_circle_24px);
-        playButton.setBackgroundResource(R.drawable.roundcorner);
-        playButton.setEnabled(false);
-
-
-
-        //Set Unique IDs for the items
-        int layoutId = teamId + rowId + 1;
-        int wordId = teamId + rowId + 2;
-        int recordId = teamId + rowId + 3;
-        int playId = teamId + rowId + 4;
-
-        buttonLayout.setId(layoutId);
-        word.setId(wordId);
-        recordButton.setId(recordId);
-        playButton.setId(playId);
-
-        //word.setText(rowWord);
-        word.setHint("Enter Word Here");
-        word.setHintTextColor(thisActivity.getColor(R.color.gray));
-
-        //Add to layout - will need more logic for later rows
-        layout.addView(buttonLayout, linearLayoutParams);
-        buttonLayout.addView(word, textParams);
-        buttonLayout.addView(recordButton, buttonParams);
-        buttonLayout.addView(playButton, buttonParams);
-
-        //Add to ArrayList of WordRowItems
-        WordRowItem currentItem = new WordRowItem(rowId, teamId, layoutId, wordId, playId, recordId, rowWord);
-        currentItem.setFilePath(filePath);
-        currentItem.setForwardsFileName(forwardsFileName);
-        currentItem.setBackwardsFileName(backwardsFileName);
-
-        wordItemList.add(currentItem);
 
     }
 
     private void setOnClickListeners(){
-        for (WordRowItem item : wordItemList) {
+        for (CabinItem item : rowList) {
             //get the view with all new stuff added
-            View root = binding.getRoot();
+            EditText word = root.findViewById(item.getWordId());
 
-            ImageButton recordButton = (ImageButton) root.findViewById(item.getRecordButtonID());
-            ImageButton playButton = (ImageButton) root.findViewById(item.getPlayButtonID());
+            Button recordButton = root.findViewById(item.getRecordId());
+            Button listenButton = root.findViewById(item.getPlayId());
+            Button reverseButton = root.findViewById(item.getReverseId());
+            Button lockInButton = root.findViewById(item.getLockId());
 
             recordButton.setOnClickListener(new View.OnClickListener() {
 
                 @RequiresPermission(Manifest.permission.RECORD_AUDIO)
                 public void onClick(View v) {
-                    onRecord(item.isReadyToRecord(), item.getFilePath(), item.getForwardsFileName());
-                    if (item.isReadyToRecord()) {
-                        //If button clicked and started recording do this
-                        recordButton.setImageResource(R.drawable.stop_circle_24px);
+                    if (gameState == 0){
+                        onRecord(item.isReadyToRecord(), item.getFilePath(), item.getForwardsFileName());
+                        if (item.isReadyToRecord()) {
+                            //If button clicked and started recording do this
+                            recordButton.setText(R.string.recording);
 
-                        disableRecordButtons(item.getRowID());
+                            disableRecordButtons(item.getRowNum());
 
-                        //set logic to disable all other record buttons - from array or button IDs?
-                    } else {
-                        //re-enable record buttons
-                        enableRecordButtons();
+                            //set logic to disable all other record buttons - from array or button IDs?
+                        } else {
+                            //re-enable record buttons
+                            enableRecordButtons();
 
-                        recordButton.setImageResource(R.drawable.recordbutton);
-                        //after recording, reverse sound clip, maybe not best to do here?
-                        //testing having the reverse be in a separate thread - helps dropped frames
-                        new Thread(() -> {
-                            try {
-                                reverseSound(item.getFilePath(), item.getForwardsFileName(), item.getBackwardsFileName());
-                                //get audio file lengths
-                                MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+                            recordButton.setText(R.string.record);
+                            //after recording, reverse sound clip, maybe not best to do here?
+                            //testing having the reverse be in a separate thread - helps dropped frames
+                            new Thread(() -> {
+                                try {
+                                    reverseSound(item.getFilePath(), item.getForwardsFileName(), item.getBackwardsFileName());
+                                    //get audio file lengths
+                                    MediaMetadataRetriever mmr = new MediaMetadataRetriever();
 
-                                //Forward Length
-                                Uri uri = Uri.parse(item.getFilePath() + item.getForwardsFileName());
-                                mmr.setDataSource(thisContext, uri);
-                                String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-                                int forwardLength = Integer.parseInt(durationStr);
-                                item.setForwardLength(forwardLength);
+                                    //Forward Length
+                                    Uri uri = Uri.parse(item.getFilePath() + item.getForwardsFileName());
+                                    mmr.setDataSource(thisContext, uri);
+                                    String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                                    int forwardLength = Integer.parseInt(durationStr);
+                                    item.setForwardLength(forwardLength);
 
-                                //Backward Length
-                                uri = Uri.parse(item.getFilePath() + item.getBackwardsFileName());
-                                mmr.setDataSource(thisContext, uri);
-                                durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-                                int backwardsLength = Integer.parseInt(durationStr);
-                                item.setBackwardsLength(backwardsLength);
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }).start();
-
-
+                                    //Backward Length
+                                    uri = Uri.parse(item.getFilePath() + item.getBackwardsFileName());
+                                    mmr.setDataSource(thisContext, uri);
+                                    durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                                    int backwardsLength = Integer.parseInt(durationStr);
+                                    item.setBackwardsLength(backwardsLength);
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }).start();
 
 
-                        //set logic to re-enable all other buttons - from array or button IDs?
-                        item.setReadyToPlay(true);
-                        playButton.setEnabled(true);
+
+
+                            //set logic to re-enable all other buttons - from array or button IDs?
+                            item.setReadyToPlay(true);
+                            listenButton.setEnabled(true);
+                            reverseButton.setEnabled(true);
+                            lockInButton.setEnabled(true);
+                        }
+                        item.setReadyToRecord(!item.isReadyToRecord());
+                    }else{
+                        //DO THIS IN STATE 1 WHICH IS GUESS MODE
+
+                        onRecord(item.isReadyToRecordGuess(), item.getFilePath(), item.getForwardsGuessFileName());
+                        if (item.isReadyToRecordGuess()) {
+                            //If button clicked and started recording do this
+                            recordButton.setText(R.string.recording);
+
+                            disableRecordButtons(item.getRowNum());
+
+                            //set logic to disable all other record buttons - from array or button IDs?
+                        } else {
+                            //re-enable record buttons
+                            enableRecordButtons();
+
+                            recordButton.setText(R.string.record);
+                            //after recording, reverse sound clip, maybe not best to do here?
+                            //testing having the reverse be in a separate thread - helps dropped frames
+                            new Thread(() -> {
+                                try {
+                                    reverseSound(item.getFilePath(), item.getForwardsGuessFileName(), item.getBackwardsGuessFileName());
+                                    //get audio file lengths
+                                    MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+
+                                    //Forward Length
+                                    Uri uri = Uri.parse(item.getFilePath() + item.getForwardsGuessFileName());
+                                    mmr.setDataSource(thisContext, uri);
+                                    String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                                    int forwardLength = Integer.parseInt(durationStr);
+                                    item.setForwardsGuessLength(forwardLength);
+
+                                    //Backward Length
+                                    uri = Uri.parse(item.getFilePath() + item.getBackwardsGuessFileName());
+                                    mmr.setDataSource(thisContext, uri);
+                                    durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                                    int backwardsLength = Integer.parseInt(durationStr);
+                                    item.setBackwardsGuessLength(backwardsLength);
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }).start();
+
+
+
+
+                            //set logic to re-enable all other buttons - from array or button IDs?
+                            item.setReadyToPlayGuess(true);
+                            reverseButton.setEnabled(true);
+                            lockInButton.setEnabled(true);
+                        }
+                        item.setReadyToRecordGuess(!item.isReadyToRecordGuess());
                     }
-                    item.setReadyToRecord(!item.isReadyToRecord());
+
+
                 }
             });
-
-            playButton.setOnClickListener(new View.OnClickListener() {
+            listenButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     if (item.isReadyToPlay()) {
                         //Change Icon - set ready to false
-                        playButton.setImageResource(R.drawable.stop_circle_24px);
+                        listenButton.setText(R.string.listening);
                         item.setReadyToPlay(false);
 
                         //disable all other play buttons
-                        disablePlayButtons(item.getRowID());
+                        disablePlayButtons(item.getRowNum());
 
                         //instantiate media player and set on completion listener to change icon back after file finishes playing
                         player = new MediaPlayer();
@@ -386,11 +420,11 @@ public class CabinFragment extends Fragment {
                             public void onCompletion(MediaPlayer mediaPlayer) {
                                 player.release();
                                 player = null;
-                                playButton.setImageResource(R.drawable.play_circle_24px);
+                                listenButton.setText(R.string.listen);
                                 item.setReadyToPlay(true);
 
                                 //re-enable all play buttons with media files
-                                enablePlayButtons();
+                                enableAllPlayButtons();
 
                             }
                         });
@@ -405,55 +439,186 @@ public class CabinFragment extends Fragment {
                     } else {
                         player.release();
                         player = null;
-                        playButton.setImageResource(R.drawable.play_circle_24px);
+                        listenButton.setText(R.string.listen);
                         item.setReadyToPlay(true);
 
                         //re-enable all play buttons with media files
-                        enablePlayButtons();
+                        enableAllPlayButtons();
                     }
+                }
+            });
+            reverseButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    if (gameState == 0) {
+                        if (item.isReadyToPlay()) {
+                            //Change Icon - set ready to false
+                            reverseButton.setText(R.string.gniyalp);
+                            item.setReadyToPlay(false);
+
+                            //disable all other play buttons
+                            disableReverseButtons(item.getRowNum());
+
+                            //instantiate media player and set on completion listener to change icon back after file finishes playing
+                            player = new MediaPlayer();
+                            player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mediaPlayer) {
+                                    player.release();
+                                    player = null;
+                                    reverseButton.setText(R.string.reverse);
+                                    item.setReadyToPlay(true);
+
+                                    //re-enable all play buttons with media files
+                                    enableAllPlayButtons();
+
+                                }
+                            });
+                            try {
+                                player.setDataSource(item.getFilePath() + item.getBackwardsFileName());
+                                player.prepare();
+                                player.start();
+                            } catch (IOException e) {
+                                Log.e(LOG_TAG, "prepare() failed");
+                            }
+
+                        } else {
+                            player.release();
+                            player = null;
+                            reverseButton.setText(R.string.reverse);
+                            item.setReadyToPlay(true);
+
+                            //re-enable all play buttons with media files
+                            enableAllPlayButtons();
+                        }
+                    } else {
+                        if (item.isReadyToPlayGuess()) {
+                            //Change Icon - set ready to false
+                            reverseButton.setText(R.string.gniyalp);
+                            item.setReadyToPlayGuess(false);
+
+                            //disable all other play buttons
+                            disableReverseButtons(item.getRowNum());
+
+                            //instantiate media player and set on completion listener to change icon back after file finishes playing
+                            player = new MediaPlayer();
+                            player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mediaPlayer) {
+                                    player.release();
+                                    player = null;
+                                    reverseButton.setText(R.string.reverse);
+                                    item.setReadyToPlayGuess(true);
+
+                                    //re-enable all play buttons with media files
+                                    enableAllPlayButtons();
+
+                                }
+                            });
+                            try {
+                                player.setDataSource(item.getFilePath() + item.getBackwardsGuessFileName());
+                                player.prepare();
+                                player.start();
+                            } catch (IOException e) {
+                                Log.e(LOG_TAG, "prepare() failed");
+                            }
+
+                        } else {
+                            player.release();
+                            player = null;
+                            reverseButton.setText(R.string.reverse);
+                            item.setReadyToPlayGuess(true);
+
+                            //re-enable all play buttons with media files
+                            enableAllPlayButtons();
+                        }
+                    }
+                }
+            });
+            lockInButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    LinearLayout row = (LinearLayout) root.findViewById(item.getButtonLayoutId());
+                    if (gameState == 0){
+                        item.setWord(word.getText().toString());
+                        word.setEnabled(false);
+                        root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
+
+                        item.setLockedIn(true);
+
+                        if (allLockedIn()){
+                            layout.findViewById(R.id.submit).setEnabled(true);
+                        }
+                    }else{
+                        item.setGuessWord(word.getText().toString());
+                        word.setEnabled(false);
+                        root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
+
+                        item.setLockedIn(true);
+
+                        if (allLockedIn()){
+                            layout.findViewById(R.id.submit).setEnabled(true);
+                        }
+                    }
+
                 }
             });
         }
 
     }
 
-    private void disableRecordButtons(int rowId){
-        //get the view with all new stuff added
-        View root = binding.getRoot();
+    private boolean allLockedIn(){
+        boolean lockedIn = true;
+        for (CabinItem item : rowList){
+            if (!item.isLockedIn()){
+                lockedIn = false;
+                break;
+            }
+        }
+        return lockedIn;
 
-        for (WordRowItem item : wordItemList){
-            if (item.getRowID() != rowId){
-                root.findViewById(item.getRecordButtonID()).setEnabled(false);
+    }
+
+    private void disableRecordButtons(int rowNum){
+        for (CabinItem item : rowList){
+            if (item.getRowNum() != rowNum){
+                root.findViewById(item.getRecordId()).setEnabled(false);
             }
         }
     }
-
     private void enableRecordButtons(){
-        //get the view with all new stuff added
-        View root = binding.getRoot();
-
-        for (WordRowItem item : wordItemList){
-            root.findViewById(item.getRecordButtonID()).setEnabled(true);
+        for (CabinItem item : rowList){
+            item.getLayout().findViewById(item.getRecordId()).setEnabled(true);
         }
     }
-
-    private void disablePlayButtons(int rowId){
-        //get the view with all new stuff added
-        View root = binding.getRoot();
-
-        for (WordRowItem item : wordItemList){
-            if (item.getRowID() != rowId){
-                root.findViewById(item.getPlayButtonID()).setEnabled(false);
+    private void disablePlayButtons(int rowNum){
+        for (CabinItem item : rowList){
+            if (item.getRowNum() != rowNum){
+                root.findViewById(item.getPlayId()).setEnabled(false);
             }
+            root.findViewById(item.getReverseId()).setEnabled(false);
         }
     }
-    private void enablePlayButtons(){
-        //get the view with all new stuff added
-        View root = binding.getRoot();
-
-        for (WordRowItem item : wordItemList){
-            if (item.getForwardLength() != 0) {
-                root.findViewById(item.getPlayButtonID()).setEnabled(true);
+    private void disableReverseButtons(int rowNum){
+        for (CabinItem item : rowList){
+            if (item.getRowNum() != rowNum){
+                root.findViewById(item.getReverseId()).setEnabled(false);
+            }
+            root.findViewById(item.getPlayId()).setEnabled(false);
+        }
+    }
+    private void enableAllPlayButtons(){
+        for (CabinItem item : rowList){
+            if (gameState == 0) {
+                if (item.getForwardLength() != 0) {
+                    root.findViewById(item.getPlayId()).setEnabled(true);
+                }
+                if (item.getBackwardsLength() != 0) {
+                    root.findViewById(item.getReverseId()).setEnabled(true);
+                }
+            }else{
+                root.findViewById(item.getPlayId()).setEnabled(true);
+                if (item.getBackwardsGuessLength() != 0) {
+                    root.findViewById(item.getReverseId()).setEnabled(true);
+                }
             }
         }
     }
@@ -563,7 +728,8 @@ public class CabinFragment extends Fragment {
         super.onDestroyView();
         mainActivityViewModel = new ViewModelProvider(requireActivity()).get(MainActivityViewModel.class);
 
-        mainActivityViewModel.setArray(wordItemList);
+        mainActivityViewModel.setState(gameState);
+        mainActivityViewModel.setCabinArray(rowList);
         mainActivityViewModel.setIsStarted(gameStarted);
 
         Log.println(Log.ERROR,"Destroyed","GameFragment Destroyed");

@@ -12,4 +12,13 @@
     <string name="menu_cabin">CABIN VERSION</string>
     <string name="menu_settings">SETTINGS</string>
     <string name="submit">SUBMIT</string>
+    <string name="record">RECORD</string>
+    <string name="recording">STOP</string>
+    <string name="listen">LISTEN</string>
+    <string name="listening">PLAYING</string>
+    <string name="reverse">REVERSE</string>
+    <string name="gniyalp">GNIYALP</string>
+    <string name="lockin">LOCK IN</string>
+    <string name="lockedin">LOCKED IN</string>
+    <string name="new_game">NEW GAME</string>
 </resources>
