@@ -21,4 +21,5 @@
     <string name="lockin">LOCK IN</string>
     <string name="lockedin">LOCKED IN</string>
     <string name="new_game">NEW GAME</string>
+    <string name="settings">SETTINGS</string>
 </resources>

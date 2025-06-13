@@ -15,6 +15,7 @@ public class MainActivityViewModel extends ViewModel {
     private final MutableLiveData<ArrayList<CabinItem>> cabinList;
     private final MutableLiveData<Boolean> isStarted;
     private final MutableLiveData<Integer> gameState;
+    private final MutableLiveData<Integer> numOfWords;
 
     public MainActivityViewModel() {
         wordItemList = new MutableLiveData<>();
@@ -25,6 +26,8 @@ public class MainActivityViewModel extends ViewModel {
         isStarted.setValue(false);
         gameState = new MutableLiveData<>();
         gameState.setValue(0);
+        numOfWords = new MutableLiveData<>();
+        numOfWords.setValue(2);
     }
 
     public Integer getState(){
@@ -33,6 +36,14 @@ public class MainActivityViewModel extends ViewModel {
 
     public void setState(Integer state){
         gameState.setValue(state);
+    }
+
+    public Integer getNumOfWords(){
+        return numOfWords.getValue();
+    }
+
+    public void setNumOfWords(Integer words){
+        numOfWords.setValue(words);
     }
 
     public Boolean isStarted(){

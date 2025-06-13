@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
@@ -48,7 +49,7 @@ public class CabinFragment extends Fragment {
     private RecRev recorder = null;
     private Context thisContext = null;
     private Activity thisActivity = null;
-    private ArrayList<CabinItem> rowList = new ArrayList<CabinItem>();
+    private ArrayList<CabinItem> rowList = new ArrayList<>();
     private LinearLayout layout = null;
     private MainActivityViewModel mainActivityViewModel;
     private View root;
@@ -94,7 +95,7 @@ public class CabinFragment extends Fragment {
     public void playGame(){
         gameState = mainActivityViewModel.getState();
 
-        startMultiLineGame(2, gameState);
+        startMultiLineGame(mainActivityViewModel.getNumOfWords(), gameState);
     }
 
 
@@ -103,9 +104,9 @@ public class CabinFragment extends Fragment {
 
         int rowId = 100 * rowNum;
 
-        EditText word = (EditText) row.findViewById(R.id.word);
+        EditText word = row.findViewById(R.id.word);
 
-        LinearLayout buttonLayout = (LinearLayout) row.findViewById(R.id.button_layout);
+        LinearLayout buttonLayout = row.findViewById(R.id.button_layout);
 
         Button listenButton = row.findViewById(R.id.listen);
         Button recordButton = row.findViewById(R.id.record);
@@ -171,7 +172,13 @@ public class CabinFragment extends Fragment {
 
         //Update recreated view with old array values
         if (!mainActivityViewModel.getCabinList().isEmpty()){
-            rowList = new ArrayList<CabinItem>(mainActivityViewModel.getCabinList());
+            rowList = new ArrayList<>(mainActivityViewModel.getCabinList());
+
+            for (int i = 1; i <= mainActivityViewModel.getCabinList().size(); i++) {
+                if (i > numOfRows){
+                    rowList.remove(i-1);
+                }
+            }
         }
 
         //if recording found, re-enable all buttons - necessary for state changes
@@ -213,13 +220,7 @@ public class CabinFragment extends Fragment {
         LinearLayout row = (LinearLayout) thisActivity.getLayoutInflater().inflate(R.layout.new_game_button,layout);
         Button newGameButton = row.findViewById(R.id.new_game_button);
 
-        newGameButton.setOnClickListener(new View.OnClickListener() {
-
-            public void onClick(View v) {
-                resetGame();
-
-            }
-        });
+        newGameButton.setOnClickListener(v -> resetGame());
     }
 
     private void resetGame(){
@@ -229,8 +230,8 @@ public class CabinFragment extends Fragment {
             item.getLayout().removeAllViewsInLayout();
         }
 
-        mainActivityViewModel.setCabinArray(new ArrayList<CabinItem>());
-        rowList = new ArrayList<CabinItem>();
+        mainActivityViewModel.setCabinArray(new ArrayList<>());
+        rowList = new ArrayList<>();
         playGame();
     }
 
@@ -238,46 +239,43 @@ public class CabinFragment extends Fragment {
         LinearLayout row = (LinearLayout) thisActivity.getLayoutInflater().inflate(R.layout.submit_button,layout);
         Button submitButton = row.findViewById(R.id.submit);
 
-        submitButton.setOnClickListener(new View.OnClickListener() {
+        submitButton.setOnClickListener(v -> {
+            switch(gameState){
+                case 0:
+                    for (CabinItem item : rowList){
+                        //Hide answer and re-enable EditText
+                        EditText word = root.findViewById(item.getWordId());
+                        word.setText("");
+                        word.setEnabled(true);
+                        //make the button layout visible again but hide the Play and Record buttons
+                        root.findViewById(item.getButtonLayoutId()).setVisibility(View.VISIBLE);
+                        root.findViewById(item.getPlayId()).setVisibility(View.VISIBLE);
+                        root.findViewById(item.getReverseId()).setEnabled(false);
+                        //reset lockedIn and disable submit button
+                        item.setLockedIn(false);
+                        submitButton.setEnabled(false);
+                    }
+                    gameState = 1;
+                    break;
+                case 1:
+                    for (CabinItem item : rowList) {
+                        EditText word = root.findViewById(item.getWordId());
+                        String correct = item.getWord()+"="+item.getGuessWord();
+                        String wrong = item.getWord()+"=/="+item.getGuessWord();
 
-            public void onClick(View v) {
-                switch(gameState){
-                    case 0:
-                        for (CabinItem item : rowList){
-                            //Hide answer and re-enable EditText
-                            EditText word = root.findViewById(item.getWordId());
-                            word.setText("");
-                            word.setEnabled(true);
-                            //make the button layout visible again but hide the Play and Record buttons
-                            root.findViewById(item.getButtonLayoutId()).setVisibility(View.VISIBLE);
-                            root.findViewById(item.getPlayId()).setVisibility(View.VISIBLE);
-                            root.findViewById(item.getReverseId()).setEnabled(false);
-                            //reset lockedIn and disable submit button
-                            item.setLockedIn(false);
-                            submitButton.setEnabled(false);
+                        if (item.getWord().equals(item.getGuessWord())){
+                            word.setText(correct);
+                            word.setTextColor(getResources().getColor(R.color.play));
+                        }else{
+                            word.setText(wrong);
+                            word.setTextColor(getResources().getColor(R.color.stop));
                         }
-                        gameState = 1;
-                        break;
-                    case 1:
-                        for (CabinItem item : rowList) {
-                            EditText word = root.findViewById(item.getWordId());
-                            String correct = item.getWord()+"="+item.getGuessWord();
-                            String wrong = item.getWord()+"=/="+item.getGuessWord();
-
-                            if (item.getWord().equals(item.getGuessWord())){
-                                word.setText(correct);
-                                word.setTextColor(getResources().getColor(R.color.play));
-                            }else{
-                                word.setText(wrong);
-                                word.setTextColor(getResources().getColor(R.color.stop));
-                            }
-                        }
-                        root.findViewById(R.id.submit).setVisibility(View.GONE);
-                        addNewGameButton();
-                        break;
-                    case 2:
-                        gameState = 0;
-                }
+                    }
+                    root.findViewById(R.id.submit).setVisibility(View.GONE);
+                    addNewGameButton();
+                    break;
+                case 2:
+                    gameState = 0;
             }
         });
 
