@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
@@ -70,7 +71,7 @@ public class CabinFragment extends Fragment {
         thisContext = getContext();
         thisActivity = getActivity();
 
-        filePath = thisContext.getExternalCacheDir().getAbsolutePath();
+        filePath = Objects.requireNonNull(thisContext.getExternalCacheDir()).getAbsolutePath();
 
         playGame();
 
@@ -544,10 +545,6 @@ public class CabinFragment extends Fragment {
                 }
             });
             lockInButton.setOnClickListener(v -> {
-                LinearLayout row = root.findViewById(item.getButtonLayoutId());
-
-
-
                 if (gameState == 0){
                     item.setWord(word.getText().toString());
                     if (item.getWord() != null && !item.getWord().isEmpty()) {

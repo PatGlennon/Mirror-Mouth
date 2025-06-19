@@ -3,9 +3,7 @@ package com.p2.mirrormouth.ui.game;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputFilter;
 import android.util.Log;
@@ -37,6 +35,7 @@ import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -180,6 +179,7 @@ public class GameFragment extends Fragment {
         for (int i = 0; i < rowList.size(); i++){
             if (i < numOfRows){
                 root.findViewById(rowList.get(i).getLayout().getId()).setVisibility(View.VISIBLE);
+                root.findViewById(rowList.get(i).getButtonLayout().getId()).setVisibility(View.VISIBLE);
             } else{
                 root.findViewById(rowList.get(i).getLayout().getId()).setVisibility(View.GONE);
             }
@@ -225,11 +225,19 @@ public class GameFragment extends Fragment {
 
         setOnClickListeners();
         Button submit = binding.submit;
+        Button newGame = binding.newGameButton;
+
+        //Hide new game button
+        newGame.setVisibility(View.GONE);
+
         if (submit.getVisibility() == View.GONE && gameState != 2){
             submit.setVisibility(View.VISIBLE);
         } else if (gameState == 2){
+            //in last game state hide submit and show newgame
+            newGame.setVisibility(View.VISIBLE);
             submit.setVisibility(View.GONE);
         }
+
     }
 
 
@@ -241,9 +249,9 @@ public class GameFragment extends Fragment {
     }
 
     private void addNewGameButton(){
-        LinearLayout row = (LinearLayout) thisActivity.getLayoutInflater().inflate(R.layout.new_game_button,layout);
-        Button newGameButton = row.findViewById(R.id.new_game_button);
+        Button newGameButton = binding.newGameButton;
 
+        newGameButton.setVisibility(View.VISIBLE);
         newGameButton.setOnClickListener(v -> resetGame());
     }
 
@@ -523,10 +531,10 @@ public class GameFragment extends Fragment {
 
                             if (item.getWord().equals(item.getGuessWord())) {
                                 word.setText(correct);
-                                word.setTextColor(getResources().getColor(R.color.play));
+                                word.setTextColor(ContextCompat.getColor(thisContext,R.color.play));
                             } else {
                                 word.setText(wrong);
-                                word.setTextColor(getResources().getColor(R.color.stop));
+                                word.setTextColor(ContextCompat.getColor(thisContext,R.color.stop));
                             }
                         }
                     }
@@ -649,7 +657,7 @@ public class GameFragment extends Fragment {
             //inverse bytes in array
             int len = wordForward.length;
             int headerLength = 44;
-            byte[] output = new byte[len];
+//            byte[] output = new byte[len];
             byte[] headers = new byte[44];
             byte[] forwardsAudio = new byte[len - headerLength];
             byte[] reversedAudio = new byte[len - headerLength];
@@ -692,10 +700,6 @@ public class GameFragment extends Fragment {
         } catch (IOException ioe) {
             Log.e(ioe.getMessage(),ioe.toString());
         }
-    }
-    public int dpToPx(int dp){
-        float scale = thisContext.getResources().getDisplayMetrics().density;
-        return (int) (dp * scale + 0.5f);
     }
 
     @Override
