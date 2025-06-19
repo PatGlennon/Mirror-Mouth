@@ -1,6 +1,6 @@
 package com.p2.mirrormouth.ui.rules;
 
-import com.p2.mirrormouth.classes.WordRowItem;
+import com.p2.mirrormouth.classes.GameItem;
 
 import java.util.ArrayList;
 
@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModel;
 public class RulesViewModel extends ViewModel {
 
     private final MutableLiveData<String> mText;
-    private final MutableLiveData<ArrayList<WordRowItem>> wordItemList;
+    private final MutableLiveData<ArrayList<GameItem>> wordItemList;
 
 
     public RulesViewModel() {
@@ -24,11 +24,11 @@ public class RulesViewModel extends ViewModel {
         return mText;
     }
 
-    public void addItemToArray(ArrayList<WordRowItem> items){
+    public void addItemToArray(ArrayList<GameItem> items){
         wordItemList.setValue(items);
     }
 
-    public ArrayList<WordRowItem> returnArray(){
+    public ArrayList<GameItem> returnArray(){
         return wordItemList.getValue();
     }
 }

@@ -2,8 +2,6 @@ package com.p2.mirrormouth.classes;
 
 import android.widget.LinearLayout;
 
-import androidx.annotation.NonNull;
-
 public class CabinItem {
     private LinearLayout layout;
     private int rowNum;

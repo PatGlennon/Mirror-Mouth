@@ -1,7 +1,6 @@
 package com.p2.mirrormouth.ui.rules;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.p2.mirrormouth.MainActivityViewModel;
-import com.p2.mirrormouth.classes.WordRowItem;
+import com.p2.mirrormouth.classes.GameItem;
 import com.p2.mirrormouth.databinding.FragmentRulesBinding;
 
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ import java.util.ArrayList;
 public class RulesFragment extends Fragment {
 
     private FragmentRulesBinding binding;
-    private ArrayList<WordRowItem> wordItemList = new ArrayList<WordRowItem>();
+    private ArrayList<GameItem> wordItemList = new ArrayList<GameItem>();
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -30,10 +29,6 @@ public class RulesFragment extends Fragment {
 
         binding = FragmentRulesBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
-
-        WordRowItem currentItem = new WordRowItem(1, 2, 3, 4, 5, 6, "word");
-
-        wordItemList.add(currentItem);
 
         rulesViewModel.addItemToArray(wordItemList);
 //

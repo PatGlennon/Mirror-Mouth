@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
@@ -95,9 +94,8 @@ public class CabinFragment extends Fragment {
     public void playGame(){
         gameState = mainActivityViewModel.getState();
 
-        startMultiLineGame(mainActivityViewModel.getNumOfWords(), gameState);
+        startMultiLineGame(2, gameState);
     }
-
 
     public void addRow(int rowNum){
         LinearLayout row = (LinearLayout) thisActivity.getLayoutInflater().inflate(R.layout.row_layout,layout);
@@ -129,6 +127,8 @@ public class CabinFragment extends Fragment {
         String backwardsGuessFileName = "/" + rowNum + "backwardsguess.wav";
 
         CabinItem currentItem = new CabinItem(row, rowNum, filePath, forwardsFileName, backwardsFileName);
+
+        //mainActivityViewModel.getCabinList().get(rowNum -1)
 
         currentItem.setForwardsGuessFileName(forwardsGuessFileName);
         currentItem.setBackwardsGuessFileName(backwardsGuessFileName);
@@ -164,6 +164,7 @@ public class CabinFragment extends Fragment {
 
     private void startMultiLineGame(int numOfRows, int gameState){
         //create the rows based on user input to be defined later
+
         if (gameState != 2) {
             for (int i = 1; i <= numOfRows; i++) {
                 addRow(i);
@@ -172,11 +173,33 @@ public class CabinFragment extends Fragment {
 
         //Update recreated view with old array values
         if (!mainActivityViewModel.getCabinList().isEmpty()){
-            rowList = new ArrayList<>(mainActivityViewModel.getCabinList());
+            int rowListSize = rowList.size();
+            int fragmentListSize = mainActivityViewModel.getCabinList().size();
 
-            for (int i = 1; i <= mainActivityViewModel.getCabinList().size(); i++) {
-                if (i > numOfRows){
-                    rowList.remove(i-1);
+            int sizeDiff = rowListSize - fragmentListSize;
+
+            Log.e("Sizes","row:"+rowListSize+"\nfrag:"+fragmentListSize+"\ndiff:"+sizeDiff);
+
+            if (sizeDiff == 0){
+                Log.e("0","no change");
+                rowList = new ArrayList<>(mainActivityViewModel.getCabinList());
+            }
+            else if (sizeDiff > 0){
+                //if game changed to have more items replace new items with old items
+                ArrayList<CabinItem> tempList = new ArrayList<>(mainActivityViewModel.getCabinList());
+
+                tempList.addAll(mainActivityViewModel.getCabinList());
+                for (int i = fragmentListSize; i < rowListSize; i++){
+                    tempList.add(i, rowList.get(i));
+                }
+
+                rowList = new ArrayList<>(tempList);
+
+            }
+            else {
+                for (int i = 0; i < rowListSize; i++) {
+                    Log.e("<0","index:"+i);
+                    rowList.add(i, mainActivityViewModel.getCabinList().get(i));
                 }
             }
         }
@@ -402,30 +425,66 @@ public class CabinFragment extends Fragment {
 
                 }
             });
-            listenButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
+            listenButton.setOnClickListener(v -> {
+                if (item.isReadyToPlay()) {
+                    //Change Icon - set ready to false
+                    listenButton.setText(R.string.listening);
+                    item.setReadyToPlay(false);
+
+                    //disable all other play buttons
+                    disablePlayButtons(item.getRowNum());
+
+                    //instantiate media player and set on completion listener to change icon back after file finishes playing
+                    player = new MediaPlayer();
+                    player.setOnCompletionListener(mediaPlayer -> {
+                        player.release();
+                        player = null;
+                        listenButton.setText(R.string.listen);
+                        item.setReadyToPlay(true);
+
+                        //re-enable all play buttons with media files
+                        enableAllPlayButtons();
+
+                    });
+                    try {
+                        player.setDataSource(item.getFilePath() + item.getBackwardsFileName());
+                        player.prepare();
+                        player.start();
+                    } catch (IOException e) {
+                        Log.e(LOG_TAG, "prepare() failed");
+                    }
+
+                } else {
+                    player.release();
+                    player = null;
+                    listenButton.setText(R.string.listen);
+                    item.setReadyToPlay(true);
+
+                    //re-enable all play buttons with media files
+                    enableAllPlayButtons();
+                }
+            });
+            reverseButton.setOnClickListener(v -> {
+                if (gameState == 0) {
                     if (item.isReadyToPlay()) {
                         //Change Icon - set ready to false
-                        listenButton.setText(R.string.listening);
+                        reverseButton.setText(R.string.gniyalp);
                         item.setReadyToPlay(false);
 
                         //disable all other play buttons
-                        disablePlayButtons(item.getRowNum());
+                        disableReverseButtons(item.getRowNum());
 
                         //instantiate media player and set on completion listener to change icon back after file finishes playing
                         player = new MediaPlayer();
-                        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                            @Override
-                            public void onCompletion(MediaPlayer mediaPlayer) {
-                                player.release();
-                                player = null;
-                                listenButton.setText(R.string.listen);
-                                item.setReadyToPlay(true);
+                        player.setOnCompletionListener(mediaPlayer -> {
+                            player.release();
+                            player = null;
+                            reverseButton.setText(R.string.reverse);
+                            item.setReadyToPlay(true);
 
-                                //re-enable all play buttons with media files
-                                enableAllPlayButtons();
+                            //re-enable all play buttons with media files
+                            enableAllPlayButtons();
 
-                            }
                         });
                         try {
                             player.setDataSource(item.getFilePath() + item.getBackwardsFileName());
@@ -438,90 +497,24 @@ public class CabinFragment extends Fragment {
                     } else {
                         player.release();
                         player = null;
-                        listenButton.setText(R.string.listen);
+                        reverseButton.setText(R.string.reverse);
                         item.setReadyToPlay(true);
 
                         //re-enable all play buttons with media files
                         enableAllPlayButtons();
                     }
-                }
-            });
-            reverseButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    if (gameState == 0) {
-                        if (item.isReadyToPlay()) {
-                            //Change Icon - set ready to false
-                            reverseButton.setText(R.string.gniyalp);
-                            item.setReadyToPlay(false);
+                } else {
+                    if (item.isReadyToPlayGuess()) {
+                        //Change Icon - set ready to false
+                        reverseButton.setText(R.string.gniyalp);
+                        item.setReadyToPlayGuess(false);
 
-                            //disable all other play buttons
-                            disableReverseButtons(item.getRowNum());
+                        //disable all other play buttons
+                        disableReverseButtons(item.getRowNum());
 
-                            //instantiate media player and set on completion listener to change icon back after file finishes playing
-                            player = new MediaPlayer();
-                            player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                @Override
-                                public void onCompletion(MediaPlayer mediaPlayer) {
-                                    player.release();
-                                    player = null;
-                                    reverseButton.setText(R.string.reverse);
-                                    item.setReadyToPlay(true);
-
-                                    //re-enable all play buttons with media files
-                                    enableAllPlayButtons();
-
-                                }
-                            });
-                            try {
-                                player.setDataSource(item.getFilePath() + item.getBackwardsFileName());
-                                player.prepare();
-                                player.start();
-                            } catch (IOException e) {
-                                Log.e(LOG_TAG, "prepare() failed");
-                            }
-
-                        } else {
-                            player.release();
-                            player = null;
-                            reverseButton.setText(R.string.reverse);
-                            item.setReadyToPlay(true);
-
-                            //re-enable all play buttons with media files
-                            enableAllPlayButtons();
-                        }
-                    } else {
-                        if (item.isReadyToPlayGuess()) {
-                            //Change Icon - set ready to false
-                            reverseButton.setText(R.string.gniyalp);
-                            item.setReadyToPlayGuess(false);
-
-                            //disable all other play buttons
-                            disableReverseButtons(item.getRowNum());
-
-                            //instantiate media player and set on completion listener to change icon back after file finishes playing
-                            player = new MediaPlayer();
-                            player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                                @Override
-                                public void onCompletion(MediaPlayer mediaPlayer) {
-                                    player.release();
-                                    player = null;
-                                    reverseButton.setText(R.string.reverse);
-                                    item.setReadyToPlayGuess(true);
-
-                                    //re-enable all play buttons with media files
-                                    enableAllPlayButtons();
-
-                                }
-                            });
-                            try {
-                                player.setDataSource(item.getFilePath() + item.getBackwardsGuessFileName());
-                                player.prepare();
-                                player.start();
-                            } catch (IOException e) {
-                                Log.e(LOG_TAG, "prepare() failed");
-                            }
-
-                        } else {
+                        //instantiate media player and set on completion listener to change icon back after file finishes playing
+                        player = new MediaPlayer();
+                        player.setOnCompletionListener(mediaPlayer -> {
                             player.release();
                             player = null;
                             reverseButton.setText(R.string.reverse);
@@ -529,44 +522,59 @@ public class CabinFragment extends Fragment {
 
                             //re-enable all play buttons with media files
                             enableAllPlayButtons();
+
+                        });
+                        try {
+                            player.setDataSource(item.getFilePath() + item.getBackwardsGuessFileName());
+                            player.prepare();
+                            player.start();
+                        } catch (IOException e) {
+                            Log.e(LOG_TAG, "prepare() failed");
                         }
+
+                    } else {
+                        player.release();
+                        player = null;
+                        reverseButton.setText(R.string.reverse);
+                        item.setReadyToPlayGuess(true);
+
+                        //re-enable all play buttons with media files
+                        enableAllPlayButtons();
                     }
                 }
             });
-            lockInButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    LinearLayout row = (LinearLayout) root.findViewById(item.getButtonLayoutId());
+            lockInButton.setOnClickListener(v -> {
+                LinearLayout row = root.findViewById(item.getButtonLayoutId());
 
 
 
-                    if (gameState == 0){
-                        item.setWord(word.getText().toString());
-                        if (item.getWord() != null && !item.getWord().isEmpty()) {
-                            word.setEnabled(false);
-                            root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
+                if (gameState == 0){
+                    item.setWord(word.getText().toString());
+                    if (item.getWord() != null && !item.getWord().isEmpty()) {
+                        word.setEnabled(false);
+                        root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
 
-                            item.setLockedIn(true);
+                        item.setLockedIn(true);
 
-                            if (allLockedIn()) {
-                                layout.findViewById(R.id.submit).setEnabled(true);
-                            }
-                        }else{
-                            Toast.makeText(thisContext,"Missing Word",Toast.LENGTH_SHORT).show();
+                        if (allLockedIn()) {
+                            layout.findViewById(R.id.submit).setEnabled(true);
                         }
                     }else{
-                        item.setGuessWord(word.getText().toString());
-                        if (item.getGuessWord() != null && !item.getGuessWord().isEmpty()) {
-                            word.setEnabled(false);
-                            root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
+                        Toast.makeText(thisContext,"Missing Word",Toast.LENGTH_SHORT).show();
+                    }
+                }else{
+                    item.setGuessWord(word.getText().toString());
+                    if (item.getGuessWord() != null && !item.getGuessWord().isEmpty()) {
+                        word.setEnabled(false);
+                        root.findViewById(item.getButtonLayoutId()).setVisibility(View.GONE);
 
-                            item.setLockedIn(true);
+                        item.setLockedIn(true);
 
-                            if (allLockedIn()) {
-                                layout.findViewById(R.id.submit).setEnabled(true);
-                            }
-                        }else{
-                            Toast.makeText(thisContext,"Missing Word",Toast.LENGTH_SHORT).show();
+                        if (allLockedIn()) {
+                            layout.findViewById(R.id.submit).setEnabled(true);
                         }
+                    }else{
+                        Toast.makeText(thisContext,"Missing Word",Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -724,7 +732,7 @@ public class CabinFragment extends Fragment {
             dos.close();
 
         } catch (IOException ioe) {
-
+            Log.e(ioe.getMessage(),ioe.toString());
         }
     }
     public int dpToPx(int dp){

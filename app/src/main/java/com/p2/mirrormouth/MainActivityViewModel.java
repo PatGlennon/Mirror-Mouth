@@ -1,27 +1,27 @@
 package com.p2.mirrormouth;
 
 import com.p2.mirrormouth.classes.CabinItem;
-import com.p2.mirrormouth.classes.WordRowItem;
+import com.p2.mirrormouth.classes.GameItem;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
-import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class MainActivityViewModel extends ViewModel {
 
-    private final MutableLiveData<ArrayList<WordRowItem>> wordItemList;
+    private final MutableLiveData<ArrayList<GameItem>> gameItemList;
     private final MutableLiveData<ArrayList<CabinItem>> cabinList;
     private final MutableLiveData<Boolean> isStarted;
     private final MutableLiveData<Integer> gameState;
     private final MutableLiveData<Integer> numOfWords;
 
     public MainActivityViewModel() {
-        wordItemList = new MutableLiveData<>();
-        wordItemList.setValue(new ArrayList<WordRowItem>());
+        gameItemList = new MutableLiveData<>();
+        gameItemList.setValue(new ArrayList<>());
         cabinList = new MutableLiveData<>();
-        cabinList.setValue(new ArrayList<CabinItem>());
+        cabinList.setValue(new ArrayList<>());
         isStarted = new MutableLiveData<>();
         isStarted.setValue(false);
         gameState = new MutableLiveData<>();
@@ -54,24 +54,25 @@ public class MainActivityViewModel extends ViewModel {
         isStarted.setValue(isGameStarted);
     }
 
-    public void setArray(ArrayList<WordRowItem> array) {
-        wordItemList.setValue(new ArrayList<WordRowItem>(array));
+    public void setArray(ArrayList<GameItem> array) {
+        gameItemList.setValue(new ArrayList<>(array));
     }
 
-    public LiveData<ArrayList<WordRowItem>> getArray() {
-        return wordItemList;
+    public ArrayList<GameItem> getGameItemList() {
+        return gameItemList.getValue();
+    }
+    public GameItem getRowItem (int rowNum){
+        return Objects.requireNonNull(gameItemList.getValue()).get(rowNum);
+    }
+    public void updateRowItem(int rowNum, GameItem gameItem){
+        Objects.requireNonNull(gameItemList.getValue()).set(rowNum, gameItem);
     }
 
-    public void setArrayList(ArrayList<WordRowItem> arrayList){
-        wordItemList.getValue().clear();
-        wordItemList.setValue(arrayList);
-    }
-
-    public ArrayList<WordRowItem> getArrayList() {
-        return wordItemList.getValue();
+    public void setGameItemList(ArrayList<GameItem> gameItemArrayList){
+        gameItemList.setValue(new ArrayList<>(gameItemArrayList));
     }
     public void setCabinArray(ArrayList<CabinItem> list){
-        cabinList.setValue(new ArrayList<CabinItem>(list));
+        cabinList.setValue(new ArrayList<>(list));
     }
     public ArrayList<CabinItem> getCabinList(){
         return cabinList.getValue();

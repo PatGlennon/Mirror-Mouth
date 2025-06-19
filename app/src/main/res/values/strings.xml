@@ -22,4 +22,6 @@
     <string name="lockedin">LOCKED IN</string>
     <string name="new_game">NEW GAME</string>
     <string name="settings">SETTINGS</string>
+    <string name="word_hint">Enter Word Here</string>
+    <string name="lock_in">LOCK IN</string>
 </resources>
