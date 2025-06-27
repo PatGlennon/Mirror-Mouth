@@ -37,10 +37,11 @@
 
         <LinearLayout
             android:id="@+id/row0"
-
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="2dp"
             android:orientation="vertical">
 
             <EditText
@@ -52,8 +53,6 @@
                 android:textColor="@color/black"
                 android:layout_weight="1"
                 android:textSize="25sp"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
                 android:layout_height="0dp"
                 android:hint="@string/word_hint"
                 android:inputType="textCapCharacters"
@@ -68,14 +67,13 @@
                 <Button
                     android:id="@+id/listen0"
                     android:layout_width="0dp"
-                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:text="@string/listen" />
                 <Button
                     android:id="@+id/record0"
                     android:layout_width="0dp"
-                    android:layout_marginStart="2dp"
                     android:layout_marginEnd="2dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -90,7 +88,6 @@
                     android:enabled="false"/>
                 <Button
                     android:id="@+id/lock0"
-                    android:layout_marginEnd="2dp"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="match_parent"
@@ -102,10 +99,11 @@
         </LinearLayout>
         <LinearLayout
             android:id="@+id/row1"
-
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="2dp"
             android:orientation="vertical">
 
             <EditText
@@ -117,8 +115,6 @@
                 android:textColor="@color/black"
                 android:layout_weight="1"
                 android:textSize="25sp"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
                 android:layout_height="0dp"
                 android:hint="@string/word_hint"
                 android:inputType="textCapCharacters"
@@ -133,14 +129,13 @@
                 <Button
                     android:id="@+id/listen1"
                     android:layout_width="0dp"
-                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:text="@string/listen" />
                 <Button
                     android:id="@+id/record1"
                     android:layout_width="0dp"
-                    android:layout_marginStart="2dp"
                     android:layout_marginEnd="2dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -155,7 +150,6 @@
                     android:enabled="false"/>
                 <Button
                     android:id="@+id/lock1"
-                    android:layout_marginEnd="2dp"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="match_parent"
@@ -167,10 +161,11 @@
         </LinearLayout>
         <LinearLayout
             android:id="@+id/row2"
-
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="2dp"
             android:orientation="vertical">
 
             <EditText
@@ -182,8 +177,6 @@
                 android:textColor="@color/black"
                 android:layout_weight="1"
                 android:textSize="25sp"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
                 android:layout_height="0dp"
                 android:hint="@string/word_hint"
                 android:inputType="textCapCharacters"
@@ -198,14 +191,13 @@
                 <Button
                     android:id="@+id/listen2"
                     android:layout_width="0dp"
-                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:text="@string/listen" />
                 <Button
                     android:id="@+id/record2"
                     android:layout_width="0dp"
-                    android:layout_marginStart="2dp"
                     android:layout_marginEnd="2dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -220,7 +212,6 @@
                     android:enabled="false"/>
                 <Button
                     android:id="@+id/lock2"
-                    android:layout_marginEnd="2dp"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="match_parent"
@@ -232,10 +223,11 @@
         </LinearLayout>
         <LinearLayout
             android:id="@+id/row3"
-
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="2dp"
             android:orientation="vertical">
 
             <EditText
@@ -247,8 +239,6 @@
                 android:textColor="@color/black"
                 android:layout_weight="1"
                 android:textSize="25sp"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
                 android:layout_height="0dp"
                 android:hint="@string/word_hint"
                 android:inputType="textCapCharacters"
@@ -263,14 +253,13 @@
                 <Button
                     android:id="@+id/listen3"
                     android:layout_width="0dp"
-                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:text="@string/listen" />
                 <Button
                     android:id="@+id/record3"
                     android:layout_width="0dp"
-                    android:layout_marginStart="2dp"
                     android:layout_marginEnd="2dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -285,7 +274,6 @@
                     android:enabled="false"/>
                 <Button
                     android:id="@+id/lock3"
-                    android:layout_marginEnd="2dp"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="match_parent"
@@ -297,10 +285,11 @@
         </LinearLayout>
         <LinearLayout
             android:id="@+id/row4"
-
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="2dp"
             android:orientation="vertical">
 
             <EditText
@@ -312,8 +301,6 @@
                 android:textColor="@color/black"
                 android:layout_weight="1"
                 android:textSize="25sp"
-                android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp"
                 android:layout_height="0dp"
                 android:hint="@string/word_hint"
                 android:inputType="textCapCharacters"
@@ -328,14 +315,13 @@
                 <Button
                     android:id="@+id/listen4"
                     android:layout_width="0dp"
-                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:text="@string/listen" />
                 <Button
                     android:id="@+id/record4"
                     android:layout_width="0dp"
-                    android:layout_marginStart="2dp"
                     android:layout_marginEnd="2dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -350,7 +336,6 @@
                     android:enabled="false"/>
                 <Button
                     android:id="@+id/lock4"
-                    android:layout_marginEnd="2dp"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="match_parent"
@@ -362,6 +347,8 @@
         </LinearLayout>
         <Button
             android:id="@+id/submit"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="25sp"
@@ -369,6 +356,8 @@
             android:text="@string/submit" />
         <Button
             android:id="@+id/new_game_button"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="25sp"

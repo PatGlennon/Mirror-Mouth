@@ -52,6 +52,7 @@ public class CabinFragment extends Fragment {
     private ArrayList<CabinItem> rowList = new ArrayList<>();
     private LinearLayout layout = null;
     private MainActivityViewModel mainActivityViewModel;
+    private int numOfWords;
     private View root;
     private Boolean gameStarted = false;
     private Integer gameState = 0;
@@ -94,6 +95,7 @@ public class CabinFragment extends Fragment {
 
     public void playGame(){
         gameState = mainActivityViewModel.getState();
+        numOfWords = mainActivityViewModel.getNumOfWords();
 
         startMultiLineGame(2, gameState);
     }

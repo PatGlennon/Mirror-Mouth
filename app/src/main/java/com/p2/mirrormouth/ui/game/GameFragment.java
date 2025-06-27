@@ -73,7 +73,6 @@ public class GameFragment extends Fragment {
 
         filePath = Objects.requireNonNull(thisContext.getExternalCacheDir()).getAbsolutePath();
 
-        numOfWords = mainActivityViewModel.getNumOfWords();
         playGame();
 
 
@@ -96,8 +95,9 @@ public class GameFragment extends Fragment {
 
     public void playGame(){
         gameState = mainActivityViewModel.getState();
-
-        startGame(2, gameState);
+        numOfWords = mainActivityViewModel.getNumOfWords();
+        Log.e("State:Words",gameState + ":" + numOfWords);
+        startGame(numOfWords, gameState);
 
         //startMultiLineGame(mainActivityViewModel.getNumOfWords(), gameState);
     }
@@ -159,7 +159,6 @@ public class GameFragment extends Fragment {
             }
 
             rowList.add(rowItem);
-            Log.e("Row", "Num = " + i);
 
         }
 
@@ -178,8 +177,14 @@ public class GameFragment extends Fragment {
         Log.e("Num of Rows",""+numOfRows);
         for (int i = 0; i < rowList.size(); i++){
             if (i < numOfRows){
+                EditText word = root.findViewById(rowList.get(i).getWordEditText().getId());
+                if(!rowList.get(i).isLockedIn()) {
+                    word.setText("");
+                }
                 root.findViewById(rowList.get(i).getLayout().getId()).setVisibility(View.VISIBLE);
                 root.findViewById(rowList.get(i).getButtonLayout().getId()).setVisibility(View.VISIBLE);
+                root.findViewById(rowList.get(i).getRecordButton().getId()).setVisibility(View.VISIBLE);
+                root.findViewById(rowList.get(i).getLockInButton().getId()).setVisibility(View.VISIBLE);
             } else{
                 root.findViewById(rowList.get(i).getLayout().getId()).setVisibility(View.GONE);
             }
@@ -256,6 +261,32 @@ public class GameFragment extends Fragment {
     }
 
     private void resetGame(){
+
+        //reset visibilities and enabled status of butons and edittexts
+        for (GameItem item : rowList){
+            //Reset text in editText - enable it for editing - reset word in GameItem (not necessary?)
+            EditText word = root.findViewById(item.getWordEditText().getId());
+            item.setWord("");
+            word.setText("");
+            word.setEnabled(true);
+            word.setTextColor(ContextCompat.getColor(thisContext,R.color.black));
+
+            //reset readyToPlay for item
+            item.setReadyToPlay(false);
+            item.setReadyToPlayGuess(false);
+            item.setLockedIn(false);
+
+            //reset buttons
+            root.findViewById(item.getListenButton().getId()).setVisibility(View.GONE);
+            root.findViewById(item.getReverseButton().getId()).setEnabled(false);
+            root.findViewById(item.getLockInButton().getId()).setEnabled(false);
+
+            //Show Buttons Again
+            root.findViewById(item.getButtonLayout().getId()).setVisibility(View.VISIBLE);
+
+
+        }
+
         gameState = 0;
         mainActivityViewModel.setState(0);
         rowList = new ArrayList<>();
@@ -371,7 +402,13 @@ public class GameFragment extends Fragment {
 
                     });
                     try {
-                        player.setDataSource(item.getFilePath() + item.getBackwardsFileName());
+                        //play original recording in state 2
+                        if (gameState == 1){
+                            player.setDataSource(item.getFilePath() + item.getBackwardsFileName());
+                        } else{
+                            player.setDataSource(item.getFilePath() + item.getForwardsFileName());
+                        }
+
                         player.prepare();
                         player.start();
                     } catch (IOException e) {
@@ -538,7 +575,17 @@ public class GameFragment extends Fragment {
                             }
                         }
                     }
+                    //show the Buttons again (to listen to original words)
+                    for (int i = 0; i < rowList.size(); i++){
+                        if (i < numOfWords){
+                            root.findViewById(rowList.get(i).getButtonLayout().getId()).setVisibility(View.VISIBLE);
+                            root.findViewById(rowList.get(i).getRecordButton().getId()).setVisibility(View.GONE);
+                            root.findViewById(rowList.get(i).getLockInButton().getId()).setVisibility(View.GONE);
+                        }
+                    }
+
                     root.findViewById(R.id.submit).setVisibility(View.GONE);
+                    gameState = 2;
                     addNewGameButton();
                     break;
                 case 2:
